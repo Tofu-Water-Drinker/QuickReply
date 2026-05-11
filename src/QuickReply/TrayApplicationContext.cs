@@ -192,6 +192,16 @@ public class TrayApplicationContext : ApplicationContext
 
     private void OpenPicker()
     {
+        // The hotkey is a toggle: if the picker is already on screen, dismiss
+        // it. Without this, pressing the hotkey twice in a row would re-run
+        // ShowPicker(), wiping whatever the user had typed and overwriting
+        // PreviousWindow with the picker's own HWND.
+        if (_picker.Visible)
+        {
+            _picker.Hide();
+            return;
+        }
+
         // Capture both the foreground window AND the inner control that has
         // keyboard focus BEFORE the picker shows. The inner control is what
         // we re-focus after paste so Ctrl+V lands in the right text box,
