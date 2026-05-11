@@ -7,7 +7,7 @@ A small Windows tray utility for service desk and support workflows. Press a hot
 ![Windows](https://img.shields.io/badge/Windows-10%2F11-6366f1?logo=windows&logoColor=white)
 ![.NET 8](https://img.shields.io/badge/.NET-8-6366f1?logo=dotnet&logoColor=white)
 
-> **v1.1.0** added reply variants, aliases, and a Manage Snippets dialog. [Grab the installer.](https://github.com/Tofu-Water-Drinker/QuickReply/releases/latest/download/QuickReplySetup.exe)
+> **v1.2.0** added a rich-text signature feature with image support, a side-by-side HTML editor, and three preset templates. [Grab the installer.](https://github.com/Tofu-Water-Drinker/QuickReply/releases/latest/download/QuickReplySetup.exe)
 
 ## Why QuickReply exists
 
@@ -21,9 +21,17 @@ It is built for service desk and tier 1/2 support workflows where the same thirt
 
 ## What's new
 
-### v1.1.0 (current)
+### v1.2.0 (current)
 
-* **Reply variants.** Each conversational code now ships with eight different ways to say the same thing. The picker chooses one at random so customers on different tickets see different wording instead of the same paragraph copy-pasted ten times.
+* **Signature with rich paste.** A new dedicated signature lives in `signature.html` next to the exe. Type the signature code (default `sig`) in the picker and it pastes as **rich HTML** in apps that support it (Outlook, Gmail web, Teams, modern ticket systems), with a plain-text fallback for everything else.
+* **HTML editor with live preview.** A side-by-side editor: edit HTML on the left, see exactly what gets pasted on the right.
+* **Embed images as base64.** One-click Insert Image button reads a local file and embeds it inline, so the signature is self-contained and travels with the paste.
+* **Three preset templates.** Default (with contact info), Minimal, and With Logo (placeholder included). All are user-editable starting points.
+* **Tray menu shortcuts.** Edit Signature... opens the editor. Copy Signature drops the rich signature on your clipboard without opening the picker.
+
+### v1.1.0
+
+* **Reply variants.** Each conversational code ships with eight different ways to say the same thing. The picker chooses one at random so customers on different tickets see different wording instead of the same paragraph copy-pasted ten times.
 * **Aliases.** Type `rbt`, `reboot`, or `restart` and get the same reply. About 30 aliases bundled with the defaults so you do not have to remember your own shorthand.
 * **Manage Snippets dialog.** A new tray menu item that lists every snippet, filters live, and lets you edit, delete, or add from one place.
 * **Randomized responses preference.** A `RandomizeResponses` switch in `appsettings.json` and on the setup wizard's Preferences page.
@@ -57,6 +65,7 @@ The full list lives in `snippets.json`. Edit, add, rename, and reload without re
 * **Paste** and **Copy Only** modes for picky ticket fields
 * **Variants per code**: ship multiple ways to say the same thing under one shortcut, picked at random so replies do not sound copy-pasted
 * **Aliases**: type `rbt`, `reboot`, or `restart` and get the same reply, so you do not have to remember your own shorthand
+* **Rich-text signature** with HTML editor, live preview, embedded images, and three preset templates. Pastes as HTML in apps that support it, plain text everywhere else.
 * Dynamic date and time tokens (e.g. `{{date:yyyy-MM-dd}}`)
 * **Manage Snippets** dialog: see, edit, delete, and add snippets from a single list
 * In-app **Add Snippet** editor with multi-variant support, no JSON wrangling required
@@ -147,6 +156,8 @@ Right-click the tray icon for the full menu:
 | Open QuickReply | Opens the picker (same as the hotkey or double-clicking the tray icon) |
 | Manage Snippets... | Opens the filterable snippet list with edit, delete, and add |
 | Add Snippet... | Opens the focused single-snippet editor |
+| Edit Signature... | Opens the HTML signature editor with live preview |
+| Copy Signature | Puts your signature on the clipboard (rich HTML + plain text fallback) without opening the picker |
 | Reload Snippets | Re-reads `snippets.json` from disk, no restart needed |
 | Open Snippets File | Opens `snippets.json` in your default editor |
 | Open Settings File | Opens `appsettings.json` in your default editor |
@@ -216,6 +227,32 @@ The defaults ship with about 30 aliases (`reboot`, `restart`, `voicemail`, `than
 
 Aliases follow each other up to 8 hops, so an alias of an alias works. Loops are detected and ignored.
 
+### Signature
+
+QuickReply ships with a separate signature feature for the styled, image-bearing block you put at the bottom of ticket replies. Unlike snippets (plain text), the signature pastes as **rich HTML** in apps that support it (Outlook, Gmail web, Teams, ServiceNow rich-text fields) and falls back to plain text in apps that do not.
+
+**Storage.** The signature lives in `signature.html` next to `QuickReply.exe`. First launch creates it from the default template; you edit it in place.
+
+**Editing.** Right-click the tray icon and choose **Edit Signature...**. The editor has two panes:
+
+* **HTML editor** on the left. You can write standard HTML with inline `style="..."` attributes for fonts, colors, sizing, links, and tables.
+* **Live preview** on the right, using the system's HTML renderer. What you see is what gets pasted.
+
+The toolbar has:
+
+* **Insert image...** Picks a file (PNG, JPG, GIF, BMP) and embeds it as a base64 data URI inside an `<img>` tag, so the signature is self-contained.
+* **Templates...** Switches to one of three preset templates: Default (with contact info), Minimal, or With Logo (placeholder block).
+* **Reset to default** Wipes your edits and restores the default template.
+
+**Using the signature.** Two paths:
+
+* **From the picker.** Press your hotkey, type `sig`, press Enter. The match label shows `Match: sig  (signature, rich paste)`. The picker remembers the previous window, restores focus, and sends Ctrl+V. The active app receives both HTML and plain text on the clipboard.
+* **Copy Signature tray item.** One click. Puts the rich signature on your clipboard. You paste with Ctrl+V yourself. Useful when you want to paste into a window the picker did not capture.
+
+**Changing the code.** If `sig` clashes with one of your own snippets, change `SignatureCode` in `appsettings.json` to anything you prefer (`signature`, `mysig`, `s`).
+
+**Images and size.** Images are embedded as base64, which inflates them by about 33%. For email signatures, a logo under 50 KB is usually fine. The editor flags signatures over ~200 KB so you can decide whether to compress.
+
 ### snippets.json format
 
 For bulk edits or version-controlling your library, open `snippets.json` directly. It lives next to `QuickReply.exe`. The format is a flat object where each value is one of:
@@ -255,7 +292,8 @@ Any `{{date:FORMAT}}` placeholder is replaced with the current local date and ti
   "Theme": "dark",
   "Hotkey": "Ctrl+Alt+;",
   "CheckForUpdatesOnStartup": true,
-  "RandomizeResponses": true
+  "RandomizeResponses": true,
+  "SignatureCode": "sig"
 }
 ```
 
@@ -269,6 +307,7 @@ Any `{{date:FORMAT}}` placeholder is replaced with the current local date and ti
 | `Hotkey` | Modifiers and key joined with `+`. See below |
 | `CheckForUpdatesOnStartup` | If `true` (default), checks GitHub for a newer release shortly after launch |
 | `RandomizeResponses` | If `true` (default), picks a random variant when a code has multiple replies. If `false`, always uses the first variant. |
+| `SignatureCode` | The picker code that triggers a rich-text signature paste. Defaults to `sig`. Change it if you want to define your own snippet at `sig`. |
 
 ### Hotkey format
 
@@ -348,6 +387,8 @@ src/QuickReply/                  the tray app
   SnippetPickerForm.cs
   AddSnippetForm.cs
   SnippetManagerForm.cs
+  SignatureService.cs
+  SignatureEditorForm.cs
   Theme.cs
   UpdateService.cs
   snippets-defaults.json   (embedded resource: default snippet set)

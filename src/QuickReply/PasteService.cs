@@ -25,14 +25,29 @@ public class PasteService
     /// Puts <paramref name="text"/> on the clipboard. If a previous foreground window
     /// is supplied and AutoPaste is enabled, restores focus and sends Ctrl+V.
     /// </summary>
-    public PasteResult PasteOrCopy(string text, IntPtr previousWindow)
+    public PasteResult PasteOrCopy(string text, IntPtr previousWindow) =>
+        PasteOrCopyInternal(
+            putOnClipboard: () => ClipboardService.SetText(text),
+            previousWindow: previousWindow);
+
+    /// <summary>
+    /// Same flow as <see cref="PasteOrCopy"/> but puts BOTH HTML and plain text
+    /// on the clipboard so rich-text-aware apps render the styling and images,
+    /// while plain-text-only fields get a clean fallback.
+    /// </summary>
+    public PasteResult PasteOrCopyRich(string html, string plainText, IntPtr previousWindow) =>
+        PasteOrCopyInternal(
+            putOnClipboard: () => ClipboardService.SetRichText(html, plainText),
+            previousWindow: previousWindow);
+
+    private PasteResult PasteOrCopyInternal(Func<bool> putOnClipboard, IntPtr previousWindow)
     {
         var settings = _settingsService.Current;
         var previousClipboard = settings.RestoreClipboardAfterPaste
             ? ClipboardService.SaveText()
             : null;
 
-        if (!ClipboardService.SetText(text))
+        if (!putOnClipboard())
         {
             return new PasteResult(false, false, "Clipboard is unavailable.");
         }

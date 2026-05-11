@@ -131,7 +131,8 @@ internal class Installer
             Theme = "dark",
             Hotkey = choices.Hotkey,
             CheckForUpdatesOnStartup = true,
-            RandomizeResponses = choices.RandomizeResponses
+            RandomizeResponses = choices.RandomizeResponses,
+            SignatureCode = "sig"
         };
         var json = JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true });
         File.WriteAllText(path, json);

@@ -21,6 +21,7 @@ public class SnippetPickerForm : Form
     private readonly SnippetService _snippets;
     private readonly PasteService _paste;
     private readonly SettingsService _settings;
+    private readonly SignatureService _signatures;
 
     private TextBox _codeInput = null!;
     private TextBox _previewBox = null!;
@@ -36,11 +37,16 @@ public class SnippetPickerForm : Form
 
     public IntPtr PreviousWindow { get; set; } = IntPtr.Zero;
 
-    public SnippetPickerForm(SnippetService snippets, PasteService paste, SettingsService settings)
+    public SnippetPickerForm(
+        SnippetService snippets,
+        PasteService paste,
+        SettingsService settings,
+        SignatureService signatures)
     {
         _snippets = snippets;
         _paste = paste;
         _settings = settings;
+        _signatures = signatures;
 
         InitializeUi();
 
@@ -417,6 +423,20 @@ public class SnippetPickerForm : Form
             return;
         }
 
+        // Signature code wins over a same-named snippet so the user always gets
+        // rich paste for their signature even if they happen to define "sig"
+        // as a regular snippet.
+        if (IsSignatureCode(code))
+        {
+            _previewBox.Text = _signatures.GetPlainText();
+            _previewHint.Visible = false;
+            _matchLabel.Text = $"●  Match: {code}  (signature, rich paste)";
+            _matchLabel.ForeColor = Theme.Success;
+            _pasteButton.Enabled = true;
+            _copyButton.Enabled = true;
+            return;
+        }
+
         var randomize = _settings.Current.RandomizeResponses;
         if (_snippets.TryResolve(code, randomize, out var text))
         {
@@ -440,6 +460,13 @@ public class SnippetPickerForm : Form
         }
     }
 
+    private bool IsSignatureCode(string code)
+    {
+        var sig = _settings.Current.SignatureCode;
+        return !string.IsNullOrWhiteSpace(sig)
+            && string.Equals(code, sig.Trim(), StringComparison.OrdinalIgnoreCase);
+    }
+
     /// <summary>
     /// Returns "  (alias -> rbt)" / "  (1 of 8 variants)" / "" depending on the
     /// shape of the matched entry. Pure decoration for the match label.
@@ -460,6 +487,21 @@ public class SnippetPickerForm : Form
     private void DoPaste()
     {
         var code = _codeInput.Text.Trim();
+
+        if (IsSignatureCode(code))
+        {
+            var html = _signatures.GetHtml();
+            var plain = _signatures.GetPlainText();
+            var prevSig = PreviousWindow;
+            Hide();
+            var sigResult = _paste.PasteOrCopyRich(html, plain, prevSig);
+            if (!string.IsNullOrEmpty(sigResult.Message))
+            {
+                ShowStatus(sigResult.Message, sigResult.Pasted ? Theme.Success : Theme.TextMuted);
+            }
+            return;
+        }
+
         var randomize = _settings.Current.RandomizeResponses;
         if (!_snippets.TryResolve(code, randomize, out var text))
         {
@@ -480,6 +522,23 @@ public class SnippetPickerForm : Form
     private void DoCopyOnly()
     {
         var code = _codeInput.Text.Trim();
+
+        if (IsSignatureCode(code))
+        {
+            var html = _signatures.GetHtml();
+            var plain = _signatures.GetPlainText();
+            if (ClipboardService.SetRichText(html, plain))
+            {
+                ShowStatus("Signature copied (rich text).", Theme.Success);
+                Hide();
+            }
+            else
+            {
+                ShowStatus("Clipboard is unavailable. Try again.", Theme.Danger);
+            }
+            return;
+        }
+
         var randomize = _settings.Current.RandomizeResponses;
         if (!_snippets.TryResolve(code, randomize, out var text))
         {

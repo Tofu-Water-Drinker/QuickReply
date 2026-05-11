@@ -10,4 +10,5 @@ public class AppSettings
     public string Hotkey { get; set; } = "Ctrl+Alt+;";
     public bool CheckForUpdatesOnStartup { get; set; } = true;
     public bool RandomizeResponses { get; set; } = true;
+    public string SignatureCode { get; set; } = "sig";
 }

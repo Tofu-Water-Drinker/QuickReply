@@ -8,6 +8,7 @@ public class TrayApplicationContext : ApplicationContext
     private readonly HotkeyManager _hotkeys;
     private readonly SnippetService _snippets;
     private readonly SettingsService _settings;
+    private readonly SignatureService _signatures;
     private readonly PasteService _paste;
     private readonly SnippetPickerForm _picker;
     private readonly UpdateService _updates;
@@ -16,8 +17,9 @@ public class TrayApplicationContext : ApplicationContext
     public TrayApplicationContext()
     {
         var baseDir = AppContext.BaseDirectory;
-        var snippetsPath = Path.Combine(baseDir, "snippets.json");
-        var settingsPath = Path.Combine(baseDir, "appsettings.json");
+        var snippetsPath  = Path.Combine(baseDir, "snippets.json");
+        var settingsPath  = Path.Combine(baseDir, "appsettings.json");
+        var signaturePath = Path.Combine(baseDir, "signature.html");
 
         _settings = new SettingsService(settingsPath);
         _settings.LoadOrCreate();
@@ -25,8 +27,11 @@ public class TrayApplicationContext : ApplicationContext
         _snippets = new SnippetService(snippetsPath);
         _snippets.LoadOrCreate();
 
+        _signatures = new SignatureService(signaturePath);
+        _signatures.LoadOrCreate();
+
         _paste = new PasteService(_settings);
-        _picker = new SnippetPickerForm(_snippets, _paste, _settings);
+        _picker = new SnippetPickerForm(_snippets, _paste, _settings, _signatures);
         _updates = new UpdateService();
 
         _trayIcon = new NotifyIcon
@@ -81,6 +86,9 @@ public class TrayApplicationContext : ApplicationContext
         menu.Items.Add("Open QuickReply", null, (_, _) => OpenPicker());
         menu.Items.Add("Manage Snippets...", null, (_, _) => OpenSnippetManager());
         menu.Items.Add("Add Snippet...", null, (_, _) => OpenAddSnippet());
+        menu.Items.Add(new ToolStripSeparator());
+        menu.Items.Add("Edit Signature...", null, (_, _) => OpenSignatureEditor());
+        menu.Items.Add("Copy Signature", null, (_, _) => CopySignatureNow());
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add("Reload Snippets", null, (_, _) => ReloadSnippets());
         menu.Items.Add("Open Snippets File", null, (_, _) => OpenFile(_snippets.FilePath));
@@ -199,6 +207,30 @@ public class TrayApplicationContext : ApplicationContext
     {
         using var dialog = new SnippetManagerForm(_snippets);
         dialog.ShowDialog();
+    }
+
+    private void OpenSignatureEditor()
+    {
+        using var dialog = new SignatureEditorForm(_signatures);
+        dialog.ShowDialog();
+    }
+
+    private void CopySignatureNow()
+    {
+        var html  = _signatures.GetHtml();
+        var plain = _signatures.GetPlainText();
+        if (ClipboardService.SetRichText(html, plain))
+        {
+            _trayIcon.ShowBalloonTip(1800, "QuickReply",
+                "Signature copied (rich text). Paste with Ctrl+V.",
+                ToolTipIcon.Info);
+        }
+        else
+        {
+            _trayIcon.ShowBalloonTip(2500, "QuickReply",
+                "Could not access the clipboard. Try again.",
+                ToolTipIcon.Warning);
+        }
     }
 
     private void ReloadSnippets()
