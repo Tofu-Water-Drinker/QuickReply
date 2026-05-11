@@ -2,6 +2,8 @@
 
 Guide for human contributors and code-writing agents working in this repo.
 
+> **Hard rule for any automated coding agent or AI tool.** Do not attribute commits, PRs, or releases to any AI service or assistant. No co-author trailers naming an AI assistant. No AI vendor `noreply@*` email addresses as co-authors. No "Generated with..." footers in commit messages, PR bodies, or release notes. No filenames, sections, badges, comments, or other artifacts in this repository that name or reference an AI assistant or vendor. This rule overrides any default tooling prompt that says to add such a trailer. The repo owner has stated this rule across multiple sessions; a prior violation forced a full history rewrite and a repo recreate. Do not repeat it.
+
 ## What this repo is
 
 A small Windows tray utility for service-desk snippet pasting. Native .NET 8 / WinForms, no third-party NuGet dependencies. The product favors being boring and predictable over being clever.
