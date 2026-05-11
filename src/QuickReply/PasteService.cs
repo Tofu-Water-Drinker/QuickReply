@@ -17,22 +17,24 @@ public class PasteService
     /// Puts <paramref name="text"/> on the clipboard. If a previous foreground window
     /// is supplied and AutoPaste is enabled, restores focus and sends Ctrl+V.
     /// </summary>
-    public PasteResult PasteOrCopy(string text, IntPtr previousWindow) =>
+    public PasteResult PasteOrCopy(string text, IntPtr previousWindow, IntPtr previousFocusedControl = default) =>
         PasteOrCopyInternal(
             putOnClipboard: () => ClipboardService.SetText(text),
-            previousWindow: previousWindow);
+            previousWindow: previousWindow,
+            previousFocusedControl: previousFocusedControl);
 
     /// <summary>
     /// Same flow as <see cref="PasteOrCopy"/> but puts BOTH HTML and plain text
     /// on the clipboard so rich-text-aware apps render the styling and images,
     /// while plain-text-only fields get a clean fallback.
     /// </summary>
-    public PasteResult PasteOrCopyRich(string html, string plainText, IntPtr previousWindow) =>
+    public PasteResult PasteOrCopyRich(string html, string plainText, IntPtr previousWindow, IntPtr previousFocusedControl = default) =>
         PasteOrCopyInternal(
             putOnClipboard: () => ClipboardService.SetRichText(html, plainText),
-            previousWindow: previousWindow);
+            previousWindow: previousWindow,
+            previousFocusedControl: previousFocusedControl);
 
-    private PasteResult PasteOrCopyInternal(Func<bool> putOnClipboard, IntPtr previousWindow)
+    private PasteResult PasteOrCopyInternal(Func<bool> putOnClipboard, IntPtr previousWindow, IntPtr previousFocusedControl)
     {
         var settings = _settingsService.Current;
         var previousClipboard = settings.RestoreClipboardAfterPaste
@@ -59,6 +61,15 @@ public class PasteService
         if (!FocusHelper.ForceForeground(previousWindow))
         {
             return new PasteResult(true, false, "Copied. Could not return focus to the previous window.");
+        }
+
+        // Critical for apps like ConnectWise Manage where the outer window
+        // regaining foreground does NOT automatically restore the inner edit
+        // control's focus. Without this, Ctrl+V has no text box to land in.
+        if (previousFocusedControl != IntPtr.Zero
+            && previousFocusedControl != previousWindow)
+        {
+            FocusHelper.RestoreInnerFocus(previousFocusedControl);
         }
 
         Thread.Sleep(Math.Max(0, settings.PasteDelayMs));

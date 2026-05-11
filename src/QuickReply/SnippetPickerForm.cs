@@ -37,6 +37,15 @@ public class SnippetPickerForm : Form
 
     public IntPtr PreviousWindow { get; set; } = IntPtr.Zero;
 
+    /// <summary>
+    /// The inner control inside <see cref="PreviousWindow"/> that had keyboard
+    /// focus when the user opened the picker. Re-focused after the outer
+    /// window is restored, so apps that do not auto-restore inner focus
+    /// (ConnectWise Manage, many Telerik editors, some browser hosts) still
+    /// receive Ctrl+V in the right text box.
+    /// </summary>
+    public IntPtr PreviousFocusedControl { get; set; } = IntPtr.Zero;
+
     public SnippetPickerForm(
         SnippetService snippets,
         PasteService paste,
@@ -493,14 +502,15 @@ public class SnippetPickerForm : Form
             var html = _signatures.GetHtml();
             var plain = _signatures.GetPlainText();
             var prevSig = PreviousWindow;
+            var prevSigCtrl = PreviousFocusedControl;
             Hide();
             // BeginInvoke defers the paste until after the message loop has
             // fully processed Hide() and reassigned foreground. Without this,
-            // PasteOrCopyRich races our own hide and the focus restore lands
-            // on a window that has not actually given up foreground yet.
+            // the focus restore races our own hide and lands on a window that
+            // has not actually given up foreground yet.
             BeginInvoke(new Action(() =>
             {
-                var sigResult = _paste.PasteOrCopyRich(html, plain, prevSig);
+                var sigResult = _paste.PasteOrCopyRich(html, plain, prevSig, prevSigCtrl);
                 if (!string.IsNullOrEmpty(sigResult.Message))
                 {
                     ShowStatus(sigResult.Message, sigResult.Pasted ? Theme.Success : Theme.TextMuted);
@@ -517,10 +527,11 @@ public class SnippetPickerForm : Form
         }
 
         var prev = PreviousWindow;
+        var prevCtrl = PreviousFocusedControl;
         Hide();
         BeginInvoke(new Action(() =>
         {
-            var result = _paste.PasteOrCopy(text, prev);
+            var result = _paste.PasteOrCopy(text, prev, prevCtrl);
             if (!string.IsNullOrEmpty(result.Message))
             {
                 ShowStatus(result.Message, result.Pasted ? Theme.Success : Theme.TextMuted);

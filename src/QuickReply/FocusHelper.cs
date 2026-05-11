@@ -45,10 +45,90 @@ internal static class FocusHelper
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool IsWindow(IntPtr hWnd);
 
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GetGUIThreadInfo(uint idThread, ref GUITHREADINFO lpgui);
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr SetFocus(IntPtr hWnd);
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct GUITHREADINFO
+    {
+        public int cbSize;
+        public int flags;
+        public IntPtr hwndActive;
+        public IntPtr hwndFocus;
+        public IntPtr hwndCapture;
+        public IntPtr hwndMenuOwner;
+        public IntPtr hwndMoveSize;
+        public IntPtr hwndCaret;
+        public RECT rcCaret;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct RECT { public int Left, Top, Right, Bottom; }
+
     private const int SW_SHOW    = 5;
     private const int SW_RESTORE = 9;
 
     public static IntPtr CurrentForegroundWindow() => GetForegroundWindow();
+
+    /// <summary>
+    /// Returns the HWND of the inner control that has keyboard focus in the
+    /// current foreground window (which may belong to another process), or
+    /// <see cref="IntPtr.Zero"/> if we cannot read it. This is what we need
+    /// to capture before stealing focus, otherwise apps like ConnectWise
+    /// Manage will not return the cursor to the field the user was typing in.
+    /// </summary>
+    public static IntPtr CaptureFocusedControl()
+    {
+        var foreground = GetForegroundWindow();
+        if (foreground == IntPtr.Zero) return IntPtr.Zero;
+
+        var threadId = GetWindowThreadProcessId(foreground, out _);
+        if (threadId == 0) return IntPtr.Zero;
+
+        var info = new GUITHREADINFO();
+        info.cbSize = Marshal.SizeOf(info);
+        if (!GetGUIThreadInfo(threadId, ref info)) return IntPtr.Zero;
+
+        // hwndFocus is the inner edit/text control; fall back to hwndActive
+        // (the top-level frame) so we always return something useful.
+        return info.hwndFocus != IntPtr.Zero
+            ? info.hwndFocus
+            : info.hwndActive;
+    }
+
+    /// <summary>
+    /// Re-focuses an inner control captured by <see cref="CaptureFocusedControl"/>.
+    /// Uses AttachThreadInput so SetFocus works across process boundaries.
+    /// Call after <see cref="ForceForeground"/> has restored the outer window.
+    /// </summary>
+    public static bool RestoreInnerFocus(IntPtr innerHwnd)
+    {
+        if (innerHwnd == IntPtr.Zero || !IsWindow(innerHwnd)) return false;
+
+        var targetThreadId  = GetWindowThreadProcessId(innerHwnd, out _);
+        var currentThreadId = GetCurrentThreadId();
+        if (targetThreadId == 0) return false;
+
+        if (targetThreadId == currentThreadId)
+        {
+            return SetFocus(innerHwnd) != IntPtr.Zero;
+        }
+
+        var attached = AttachThreadInput(currentThreadId, targetThreadId, true);
+        try
+        {
+            SetFocus(innerHwnd);
+        }
+        finally
+        {
+            if (attached) AttachThreadInput(currentThreadId, targetThreadId, false);
+        }
+        return true;
+    }
 
     /// <summary>
     /// Brings <paramref name="hWnd"/> to the foreground, restoring it if it is

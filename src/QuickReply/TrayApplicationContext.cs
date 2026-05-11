@@ -192,8 +192,13 @@ public class TrayApplicationContext : ApplicationContext
 
     private void OpenPicker()
     {
-        // Capture the foreground window BEFORE the picker shows.
+        // Capture both the foreground window AND the inner control that has
+        // keyboard focus BEFORE the picker shows. The inner control is what
+        // we re-focus after paste so Ctrl+V lands in the right text box,
+        // even in apps that do not auto-restore inner focus when their
+        // outer window regains foreground (e.g. ConnectWise Manage).
         _picker.PreviousWindow = PasteService.CaptureForegroundWindow();
+        _picker.PreviousFocusedControl = FocusHelper.CaptureFocusedControl();
         _picker.ShowPicker();
     }
 
