@@ -360,9 +360,6 @@ src/QuickReplySetup/             the setup wizard
   SetupChoices.cs
   app.manifest
 README.md
-ARCHITECTURE.md
 ```
 
 `snippets.json` and `appsettings.json` are created next to the executable on first launch.
-
-See [ARCHITECTURE.md](ARCHITECTURE.md) for a deeper walkthrough of the codebase.
