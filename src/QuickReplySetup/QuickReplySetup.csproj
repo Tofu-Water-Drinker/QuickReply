@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <RootNamespace>QuickReply.Setup</RootNamespace>
+    <AssemblyName>QuickReplySetup</AssemblyName>
+    <Version>1.0.0</Version>
+    <Product>QuickReply Setup</Product>
+    <AssemblyTitle>QuickReply Setup</AssemblyTitle>
+    <Company>QuickReply</Company>
+    <Description>First-time setup wizard for QuickReply.</Description>
+  </PropertyGroup>
+
+  <!-- Share the design system (palette, custom controls) with the main app. -->
+  <ItemGroup>
+    <Compile Include="..\QuickReply\Theme.cs" Link="Theme.cs" />
+  </ItemGroup>
+
+</Project>

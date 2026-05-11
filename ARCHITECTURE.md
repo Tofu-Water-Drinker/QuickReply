@@ -66,6 +66,19 @@ When debugging via `dotnet run`, these files land in
   used by the picker: `CardPanel`, `ChipButton`, `ActionButton`, `HotkeyPill`.
   All custom controls clear to `BackColor` before painting their rounded path
   so the corners outside the path blend with the parent.
+- `src/QuickReplySetup/` — a sibling WinForms project that builds a separate
+  `QuickReplySetup.exe` (the first-time install wizard). It is self-contained
+  .NET 8 and links the main app's `Theme.cs` so the wizard matches the picker
+  visually. The installer downloads `QuickReply.exe` from
+  `https://github.com/Tofu-Water-Drinker/QuickReply/releases/latest/download/QuickReply.exe`
+  at install time (so the installer binary stays small relative to embedding
+  the app, and always installs the latest released version). The wizard
+  writes `appsettings.json` with the user's hotkey choice and, if they pick
+  custom snippets, `snippets.json`. Windows startup is implemented as a
+  string value under `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`
+  (no admin privileges, no shortcut file, easy to remove via Task Manager
+  Startup). Update the `ReleaseDownloadUrl` constant in `Installer.cs` if
+  the repository ever moves.
 - `UpdateService.cs` — queries
   `https://api.github.com/repos/{RepoOwner}/{RepoName}/releases/latest`,
   parses `tag_name`, strips any leading `v` and any `-prerelease` / `+meta`

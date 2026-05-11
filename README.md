@@ -58,7 +58,27 @@ QuickReply remembers the window you were focused on before opening the picker, r
 
 Some web-based ticket systems, rich text editors, and SLA portals fight programmatic paste. They strip the keystroke, double-paste, or drop the input entirely. **Copy Only** sidesteps this: it just puts the snippet on your clipboard and gets out of the way. Then you paste with Ctrl+V yourself, and the ticket field receives a normal paste event with no surprises. If a particular field gives you trouble, Copy Only is the reliable fallback.
 
-## Quick start
+## Install
+
+### Option 1: Run the setup wizard (recommended for end users)
+
+Download `QuickReplySetup.exe` from the [latest release](https://github.com/Tofu-Water-Drinker/QuickReply/releases/latest) and double-click it. The wizard walks you through:
+
+1. **Welcome.** What you are installing.
+2. **Install location.** Defaults to `%LOCALAPPDATA%\Programs\QuickReply` (no admin needed). Browse to a different folder if you prefer.
+3. **Hotkey.** Keep the default `Ctrl + Alt + ;` or pick your own combination.
+4. **Snippets.** Start with the 36 included service desk snippets, start empty, or define your own in a small grid.
+5. **Windows startup.** Opt in to launch QuickReply automatically when you sign in.
+6. **Summary.** Review your choices.
+7. **Install.** The wizard downloads the latest `QuickReply.exe` from this repository's releases, writes `appsettings.json` and (if you chose custom) `snippets.json`, and optionally registers QuickReply under `HKCU\...\Run` for startup.
+
+After install, the wizard offers to launch QuickReply right away. Press your hotkey and you are off.
+
+### Option 2: Plain download
+
+If you do not want the wizard, grab `QuickReply.exe` directly from the [latest release](https://github.com/Tofu-Water-Drinker/QuickReply/releases/latest) and drop it anywhere. On first launch it creates `snippets.json` and `appsettings.json` next to itself with the defaults.
+
+### Option 3: Build from source
 
 Requires the .NET 8 SDK (or newer with the .NET 8 targeting pack).
 
@@ -71,13 +91,17 @@ dotnet run --project src/QuickReply/QuickReply.csproj -c Release
 
 Then press **Ctrl + Alt + ;**, type `fu`, and press Enter.
 
-To build a portable single-file executable you can copy to any Windows 10/11 machine:
+To build the portable single-file executables you can ship to other machines:
 
 ```bash
+# The main app
 dotnet publish src/QuickReply/QuickReply.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
+
+# The setup wizard (downloads the main app from GitHub releases at install time)
+dotnet publish src/QuickReplySetup/QuickReplySetup.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish-setup
 ```
 
-The resulting `publish\QuickReply.exe` is everything you need.
+The resulting `publish\QuickReply.exe` and `publish-setup\QuickReplySetup.exe` are everything you need.
 
 ## Using the picker
 
@@ -207,7 +231,7 @@ If you really need paste to work for elevated targets, run QuickReply itself as 
 
 ```
 QuickReply.sln
-src/QuickReply/
+src/QuickReply/                  the tray app
   Program.cs
   TrayApplicationContext.cs
   HotkeyManager.cs
@@ -220,6 +244,12 @@ src/QuickReply/
   Theme.cs
   UpdateService.cs
   Models/AppSettings.cs
+  app.manifest
+src/QuickReplySetup/             the setup wizard
+  Program.cs
+  SetupWizardForm.cs
+  Installer.cs
+  SetupChoices.cs
   app.manifest
 README.md
 ARCHITECTURE.md

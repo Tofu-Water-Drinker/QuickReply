@@ -24,6 +24,7 @@ internal static class Theme
 
     public static Font H1()        => new("Segoe UI Semibold", 15.5f, FontStyle.Bold);
     public static Font Subtitle()  => new("Segoe UI", 9f, FontStyle.Regular);
+    public static Font Body()      => new("Segoe UI", 9.75f, FontStyle.Regular);
     public static Font BodyLg()    => new("Segoe UI", 11.5f, FontStyle.Regular);
     public static Font Preview()   => new("Segoe UI", 10f, FontStyle.Regular);
     public static Font Caps()      => new("Segoe UI Semibold", 7.75f, FontStyle.Bold);
