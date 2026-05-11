@@ -1,0 +1,218 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>QuickReply - Signature</title>
+<style>
+:root {
+  --bg:            rgb(20, 22, 27);
+  --bg-raised:     rgb(26, 29, 35);
+  --surface:       rgb(33, 37, 45);
+  --surface-hi:    rgb(43, 48, 58);
+  --border:        rgb(45, 50, 60);
+  --border-hi:     rgb(72, 80, 96);
+  --accent:        rgb(99, 102, 241);
+  --accent-soft:   rgb(165, 175, 245);
+  --accent-bg:     rgb(40, 41, 80);
+  --text:          rgb(229, 231, 235);
+  --text-muted:    rgb(156, 163, 175);
+  --text-dim:      rgb(107, 114, 128);
+  --success:       rgb(74, 222, 128);
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0;
+  background: #0c0d10;
+  font-family: "Segoe UI", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+.scene {
+  width: 1040px; height: 700px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 40px;
+}
+.window {
+  width: 960px; height: 620px;
+  background: var(--bg);
+  border: 1px solid var(--border-hi);
+  border-radius: 10px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.55), 0 4px 14px rgba(0,0,0,0.4);
+  color: var(--text);
+  padding: 20px 24px;
+  position: relative;
+  overflow: hidden;
+}
+.window::before {
+  content: "";
+  position: absolute;
+  left: 24px; right: 24px;
+  top: 84px;
+  height: 1px;
+  background: var(--border);
+}
+.title {
+  font-family: "Segoe UI Semibold", sans-serif;
+  font-weight: 700;
+  font-size: 21px;
+  margin: 8px 0 6px 0;
+}
+.subtitle {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.toolbar {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+.btn {
+  font-family: "Segoe UI Semibold", sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+}
+.btn.ghost {
+  background: var(--bg);
+  color: var(--text-muted);
+}
+
+.panes {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+.pane-label {
+  font-family: "Segoe UI Semibold", sans-serif;
+  font-weight: 700;
+  font-size: 10.5px;
+  letter-spacing: 0.6px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+.pane-card {
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  height: 360px;
+  padding: 14px 16px;
+  overflow: hidden;
+}
+.pane-card.preview {
+  background: #ffffff;
+  color: #1f2937;
+  border-color: var(--border);
+}
+.html-source {
+  font-family: Consolas, "Cascadia Mono", monospace;
+  font-size: 12px;
+  color: var(--text);
+  white-space: pre;
+  line-height: 1.55;
+}
+.html-source .tag { color: rgb(165, 175, 245); }
+.html-source .attr { color: rgb(180, 200, 140); }
+.html-source .val { color: rgb(236, 175, 130); }
+.html-source .text { color: rgb(229, 231, 235); }
+
+.preview-body {
+  font-family: "Segoe UI", Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.45;
+  color: #1f2937;
+}
+.preview-body p { margin: 0; }
+.preview-body .name { font-size: 16px; font-weight: 700; margin: 12px 0 4px 0; }
+.preview-body .muted { color: #6b7280; margin: 0; }
+.preview-body a { color: #6366f1; text-decoration: none; }
+
+.safety {
+  position: absolute;
+  left: 24px; right: 24px;
+  bottom: 64px;
+  color: var(--success);
+  font-size: 11.5px;
+  font-style: italic;
+}
+.footer {
+  position: absolute;
+  left: 24px; right: 24px;
+  bottom: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.status {
+  color: var(--text-muted);
+  font-size: 11.5px;
+  font-style: italic;
+}
+.buttons { display: flex; gap: 8px; }
+.btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+</style>
+</head>
+<body>
+<div class="scene">
+  <div class="window">
+    <div class="title">Signature</div>
+    <div class="subtitle">Edit the HTML on the left. The right pane previews how it will look when pasted.</div>
+
+    <div class="toolbar">
+      <div class="btn">Insert image...</div>
+      <div class="btn">Templates...</div>
+      <div class="btn ghost">Reset to default</div>
+    </div>
+
+    <div class="panes">
+      <div>
+        <div class="pane-label">HTML</div>
+        <div class="pane-card">
+<div class="html-source"><span class="tag">&lt;div</span> <span class="attr">style</span>=<span class="val">"font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; color: #1f2937; line-height: 1.45;"</span><span class="tag">&gt;</span>
+  <span class="tag">&lt;p</span> <span class="attr">style</span>=<span class="val">"margin: 0;"</span><span class="tag">&gt;</span><span class="text">Thanks,</span><span class="tag">&lt;/p&gt;</span>
+  <span class="tag">&lt;p</span> <span class="attr">style</span>=<span class="val">"margin: 12px 0 4px 0;"</span><span class="tag">&gt;</span>
+    <span class="tag">&lt;strong</span> <span class="attr">style</span>=<span class="val">"font-size: 13pt;"</span><span class="tag">&gt;</span><span class="text">Matthew Johnson</span><span class="tag">&lt;/strong&gt;</span>
+  <span class="tag">&lt;/p&gt;</span>
+  <span class="tag">&lt;p</span> <span class="attr">style</span>=<span class="val">"margin: 0; color: #6b7280;"</span><span class="tag">&gt;</span><span class="text">Service Desk · Acme Corp</span><span class="tag">&lt;/p&gt;</span>
+  <span class="tag">&lt;p</span> <span class="attr">style</span>=<span class="val">"margin: 0; color: #6b7280;"</span><span class="tag">&gt;</span>
+    <span class="tag">&lt;a</span> <span class="attr">href</span>=<span class="val">"mailto:m.johnson@acme.com"</span>
+       <span class="attr">style</span>=<span class="val">"color: #6366f1;"</span><span class="tag">&gt;</span><span class="text">m.johnson@acme.com</span><span class="tag">&lt;/a&gt;</span>
+    · (555) 123-4567
+  <span class="tag">&lt;/p&gt;</span>
+<span class="tag">&lt;/div&gt;</span></div>
+        </div>
+      </div>
+      <div>
+        <div class="pane-label">PREVIEW</div>
+        <div class="pane-card preview">
+          <div class="preview-body">
+            <p>Thanks,</p>
+            <p class="name">Matthew Johnson</p>
+            <p class="muted">Service Desk · Acme Corp</p>
+            <p class="muted"><a href="#">m.johnson@acme.com</a> · (555) 123-4567</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="safety">Safe mode is on. Signature HTML is sanitized before paste (scripts, event handlers, javascript: URLs are stripped).</div>
+
+    <div class="footer">
+      <div class="status">Unsaved changes  ·  612 bytes  ·  Ctrl+Enter to save</div>
+      <div class="buttons">
+        <div class="btn ghost">Cancel</div>
+        <div class="btn primary">Save</div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,317 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>QuickReply picker</title>
+<style>
+:root {
+  /* Palette pulled from src/QuickReply/Theme.cs */
+  --bg:            rgb(20, 22, 27);
+  --bg-raised:     rgb(26, 29, 35);
+  --surface:       rgb(33, 37, 45);
+  --surface-hi:    rgb(43, 48, 58);
+  --border:        rgb(45, 50, 60);
+  --border-hi:     rgb(72, 80, 96);
+  --accent:        rgb(99, 102, 241);
+  --accent-hi:     rgb(129, 140, 248);
+  --accent-soft:   rgb(165, 175, 245);
+  --accent-bg:     rgb(40, 41, 80);
+  --text:          rgb(229, 231, 235);
+  --text-muted:    rgb(156, 163, 175);
+  --text-dim:      rgb(107, 114, 128);
+  --success:       rgb(74, 222, 128);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0; padding: 0;
+  background: #0c0d10;
+  font-family: "Segoe UI", "Segoe UI Web", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Page wrapper centers the borderless window the way Windows would */
+.scene {
+  width: 760px;
+  height: 750px;
+  background: #0c0d10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+/* The picker window itself: 680x670 borderless with drop shadow */
+.window {
+  width: 680px;
+  height: 670px;
+  background: var(--bg);
+  border: 1px solid var(--border-hi);
+  border-radius: 10px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.55), 0 4px 14px rgba(0,0,0,0.4);
+  color: var(--text);
+  position: relative;
+  padding: 20px 24px;
+  overflow: hidden;
+}
+
+.window::before {
+  /* The thin divider line under the header (DrawLine at y=84 in code) */
+  content: "";
+  position: absolute;
+  left: 24px; right: 24px;
+  top: 84px;
+  height: 1px;
+  background: var(--border);
+}
+
+.title {
+  font-family: "Segoe UI Semibold", "Segoe UI", sans-serif;
+  font-weight: 700;
+  font-size: 21px;
+  color: var(--text);
+  margin: 8px 0 6px 0;
+}
+.subtitle {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 0;
+}
+.hotkey-pill {
+  position: absolute;
+  top: 28px; right: 24px;
+  background: var(--accent-bg);
+  border: 1px solid var(--accent);
+  color: var(--accent-soft);
+  font-family: "Segoe UI Semibold", sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  letter-spacing: 0.2px;
+}
+
+.section-label {
+  font-family: "Segoe UI Semibold", sans-serif;
+  font-weight: 700;
+  font-size: 10.5px;
+  letter-spacing: 0.6px;
+  color: var(--text-muted);
+  margin: 18px 0 8px 0;
+}
+
+.code-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.chevron {
+  font-size: 22px;
+  color: var(--accent-soft);
+  font-weight: 700;
+  width: 18px;
+  text-align: center;
+}
+.code-input {
+  flex: 1;
+  background: var(--surface);
+  border: 1.4px solid var(--accent);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 15px;
+  color: var(--text);
+  font-family: "Segoe UI", sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 1px;
+}
+.code-input .typed {
+  color: var(--text);
+}
+.code-input .caret {
+  display: inline-block;
+  width: 1.5px;
+  height: 17px;
+  background: var(--text);
+  margin-left: 1px;
+  vertical-align: middle;
+  animation: blink 1s steps(1) infinite;
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+.match-line {
+  margin-top: 10px;
+  margin-left: 30px;
+  font-size: 12px;
+  color: var(--success);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.match-line .dot {
+  width: 8px; height: 8px;
+  border-radius: 999px;
+  background: var(--success);
+  display: inline-block;
+}
+
+.preview-card {
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  min-height: 96px;
+  margin-top: 8px;
+  white-space: pre-wrap;
+  font-family: "Segoe UI", sans-serif;
+  font-size: 13.5px;
+  color: var(--text);
+  line-height: 1.55;
+}
+
+.quick-picks-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16px;
+}
+.new-snippet-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: "Segoe UI Semibold", sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  padding: 7px 14px;
+  border-radius: 8px;
+}
+
+.chips {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 10px;
+}
+.chip {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 11px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+.chip.hover {
+  background: var(--surface-hi);
+  border-color: var(--border-hi);
+}
+.chip .chip-code {
+  color: var(--accent-soft);
+  font-family: "Segoe UI Semibold", sans-serif;
+  font-weight: 700;
+  font-size: 12.5px;
+  min-width: 50px;
+}
+.chip.hover .chip-code {
+  color: var(--accent-hi);
+}
+.chip .chip-label {
+  color: var(--text);
+  font-size: 12px;
+}
+
+/* Footer area */
+.footer {
+  position: absolute;
+  left: 24px; right: 24px;
+  bottom: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.status {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-style: italic;
+}
+.buttons {
+  display: flex;
+  gap: 8px;
+}
+.btn {
+  font-family: "Segoe UI Semibold", sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  padding: 9px 18px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-muted);
+  min-width: 70px;
+}
+.btn.secondary {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--text);
+}
+.btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+  min-width: 86px;
+}
+</style>
+</head>
+<body>
+<div class="scene">
+  <div class="window">
+    <div class="title">QuickReply</div>
+    <div class="subtitle">Service desk snippet picker</div>
+    <div class="hotkey-pill">Ctrl + Alt + ;</div>
+
+    <div class="section-label">SNIPPET CODE</div>
+    <div class="code-row">
+      <div class="chevron">›</div>
+      <div class="code-input">
+        <span class="typed">fu</span><span class="caret"></span>
+      </div>
+    </div>
+    <div class="match-line"><span class="dot"></span>Match: fu  (8 variants, random)</div>
+
+    <div class="section-label" style="margin-top:18px;">PREVIEW</div>
+    <div class="preview-card">Following up on this ticket. Are you still experiencing the issue, or did it resolve on its own? If you are good to go, I will close this out.</div>
+
+    <div class="quick-picks-row">
+      <div class="section-label" style="margin:0;">QUICK PICKS</div>
+      <div class="new-snippet-btn">+  New snippet</div>
+    </div>
+
+    <div class="chips">
+      <div class="chip hover"><span class="chip-code">fu</span><span class="chip-label">Follow up</span></div>
+      <div class="chip"><span class="chip-code">vm</span><span class="chip-label">Voicemail</span></div>
+      <div class="chip"><span class="chip-code">close</span><span class="chip-label">Close ticket</span></div>
+      <div class="chip"><span class="chip-code">rbt</span><span class="chip-label">Reboot request</span></div>
+      <div class="chip"><span class="chip-code">ty</span><span class="chip-label">Thanks</span></div>
+      <div class="chip"><span class="chip-code">dig</span><span class="chip-label">Digging in</span></div>
+      <div class="chip"><span class="chip-code">wait</span><span class="chip-label">Need to verify</span></div>
+      <div class="chip"><span class="chip-code">ts</span><span class="chip-label">Troubleshooting log</span></div>
+      <div class="chip"><span class="chip-code">note</span><span class="chip-label">Ticket note</span></div>
+      <div class="chip"><span class="chip-code">esc</span><span class="chip-label">Escalation</span></div>
+      <div class="chip"><span class="chip-code">heads</span><span class="chip-label">Heads up</span></div>
+      <div class="chip"><span class="chip-code">impact</span><span class="chip-label">Impact update</span></div>
+    </div>
+
+    <div class="footer">
+      <div class="status">36 snippets loaded  ·  Esc to close</div>
+      <div class="buttons">
+        <div class="btn">Cancel</div>
+        <div class="btn secondary">Copy Only</div>
+        <div class="btn primary">Paste</div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

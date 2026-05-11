@@ -1,0 +1,249 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>QuickReply - Manage Snippets</title>
+<style>
+:root {
+  --bg:            rgb(20, 22, 27);
+  --bg-raised:     rgb(26, 29, 35);
+  --surface:       rgb(33, 37, 45);
+  --surface-hi:    rgb(43, 48, 58);
+  --border:        rgb(45, 50, 60);
+  --border-hi:     rgb(72, 80, 96);
+  --accent:        rgb(99, 102, 241);
+  --accent-soft:   rgb(165, 175, 245);
+  --accent-bg:     rgb(40, 41, 80);
+  --text:          rgb(229, 231, 235);
+  --text-muted:    rgb(156, 163, 175);
+  --text-dim:      rgb(107, 114, 128);
+  --success:       rgb(74, 222, 128);
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0;
+  background: #0c0d10;
+  font-family: "Segoe UI", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+.scene {
+  width: 960px; height: 720px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 40px;
+}
+.window {
+  width: 880px; height: 640px;
+  background: var(--bg);
+  border: 1px solid var(--border-hi);
+  border-radius: 10px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.55), 0 4px 14px rgba(0,0,0,0.4);
+  color: var(--text);
+  padding: 20px 24px;
+  position: relative;
+  overflow: hidden;
+}
+.window::before {
+  content: "";
+  position: absolute;
+  left: 24px; right: 24px;
+  top: 84px;
+  height: 1px;
+  background: var(--border);
+}
+.title {
+  font-family: "Segoe UI Semibold", sans-serif;
+  font-weight: 700;
+  font-size: 21px;
+  margin: 8px 0 6px 0;
+}
+.subtitle {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.toolbar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 18px;
+}
+.filter-card {
+  flex: 1;
+  background: var(--surface);
+  border: 1.4px solid var(--accent);
+  border-radius: 10px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.filter-card .icon {
+  color: var(--text-dim);
+  font-size: 14px;
+}
+.filter-card .placeholder {
+  color: var(--text);
+  font-size: 13.5px;
+}
+.btn {
+  font-family: "Segoe UI Semibold", sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  padding: 9px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  min-width: 76px;
+  text-align: center;
+}
+.btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+.btn.ghost {
+  background: var(--bg);
+  color: var(--text-muted);
+}
+
+.list-card {
+  margin-top: 14px;
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  height: 410px;
+}
+.list-header {
+  display: grid;
+  grid-template-columns: 120px 180px 1fr;
+  padding: 10px 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  font-family: "Segoe UI Semibold", sans-serif;
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 0.6px;
+  color: var(--text-muted);
+}
+.row {
+  display: grid;
+  grid-template-columns: 120px 180px 1fr;
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--border);
+  align-items: center;
+  font-size: 12.5px;
+  color: var(--text);
+}
+.row.selected {
+  background: var(--accent-bg);
+  color: var(--text);
+}
+.row .code {
+  color: var(--accent-soft);
+  font-family: "Segoe UI Semibold", sans-serif;
+  font-weight: 700;
+}
+.row .type {
+  color: var(--text-muted);
+  font-size: 11.5px;
+}
+.row .preview {
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.footer {
+  position: absolute;
+  left: 24px; right: 24px;
+  bottom: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.status {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-style: italic;
+}
+.buttons { display: flex; gap: 8px; }
+
+</style>
+</head>
+<body>
+<div class="scene">
+  <div class="window">
+    <div class="title">Manage Snippets</div>
+    <div class="subtitle">36 snippets · double-click a row to edit · type to filter</div>
+
+    <div class="toolbar">
+      <div class="filter-card">
+        <span class="icon">⌕</span>
+        <span class="placeholder">follow</span>
+      </div>
+      <div class="btn">Add</div>
+      <div class="btn">Edit</div>
+      <div class="btn ghost">Delete</div>
+    </div>
+
+    <div class="list-card">
+      <div class="list-header">
+        <div>CODE</div>
+        <div>TYPE</div>
+        <div>PREVIEW</div>
+      </div>
+      <div class="row selected">
+        <div class="code">fu</div>
+        <div class="type">8 variants</div>
+        <div class="preview">Following up on this ticket. Are you still experiencing the issue?</div>
+      </div>
+      <div class="row">
+        <div class="code">followup</div>
+        <div class="type">alias → fu</div>
+        <div class="preview">(alias) Following up on this ticket. Are you still experiencing the issue?</div>
+      </div>
+      <div class="row">
+        <div class="code">checkin</div>
+        <div class="type">alias → fu</div>
+        <div class="preview">(alias) Following up on this ticket. Are you still experiencing the issue?</div>
+      </div>
+      <div class="row">
+        <div class="code">vm</div>
+        <div class="type">8 variants</div>
+        <div class="preview">I left you a voicemail and will follow up again if I do not hear back.</div>
+      </div>
+      <div class="row">
+        <div class="code">rbt</div>
+        <div class="type">8 variants</div>
+        <div class="preview">Please reboot the computer when you have a chance, then let me know if the issue persists.</div>
+      </div>
+      <div class="row">
+        <div class="code">reboot</div>
+        <div class="type">alias → rbt</div>
+        <div class="preview">(alias) Please reboot the computer when you have a chance, then let me know...</div>
+      </div>
+      <div class="row">
+        <div class="code">close</div>
+        <div class="type">8 variants</div>
+        <div class="preview">I am marking this ticket resolved for now. Reply here if the issue returns.</div>
+      </div>
+      <div class="row">
+        <div class="code">esc</div>
+        <div class="type">single</div>
+        <div class="preview">Escalation summary  ·  Issue: ...  ·  Impact: ...  ·  What we need next: ...</div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div class="status">Showing 8 of 36 snippets matching "follow"</div>
+      <div class="buttons">
+        <div class="btn ghost">Close</div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
