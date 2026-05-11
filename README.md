@@ -2,6 +2,13 @@
 
 A small Windows tray utility for service desk and support workflows. Press a hotkey, type a short code like `fu`, and paste a clean, consistent reply into your ticket.
 
+[![Latest release](https://img.shields.io/github/v/release/Tofu-Water-Drinker/QuickReply?label=latest&color=6366f1)](https://github.com/Tofu-Water-Drinker/QuickReply/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/Tofu-Water-Drinker/QuickReply/total?color=6366f1)](https://github.com/Tofu-Water-Drinker/QuickReply/releases)
+![Windows](https://img.shields.io/badge/Windows-10%2F11-6366f1?logo=windows&logoColor=white)
+![.NET 8](https://img.shields.io/badge/.NET-8-6366f1?logo=dotnet&logoColor=white)
+
+> **v1.1.0** added reply variants, aliases, and a Manage Snippets dialog. [Grab the installer.](https://github.com/Tofu-Water-Drinker/QuickReply/releases/latest/download/QuickReplySetup.exe)
+
 ## Why QuickReply exists
 
 QuickReply started as a simple AutoHotkey script for common service desk responses. The idea was practical: type short triggers like `;fu`, `;vm`, `;close`, `;rbt` and have them expand into pre-written ticket replies, so techs would not have to retype "Following up on this ticket..." for the hundredth time that week.
@@ -11,6 +18,20 @@ AutoHotkey was great for prototyping. The problem is that real ticket systems ar
 QuickReply is the standalone version of that idea. It is a native Windows tray app that opens from a global hotkey, shows you the matching reply, and either pastes it directly or hands you a clean copy of the text for manual paste. No hotstrings to misfire. No fragile browser injection. Open, pick, paste.
 
 It is built for service desk and tier 1/2 support workflows where the same thirty or so sentences make up most of your written communication: follow-ups, voicemail notes, reboot requests, vendor case updates, escalation summaries, incident updates. The kind of writing that needs to be consistent and fast, not creative.
+
+## What's new
+
+### v1.1.0 (current)
+
+* **Reply variants.** Each conversational code now ships with eight different ways to say the same thing. The picker chooses one at random so customers on different tickets see different wording instead of the same paragraph copy-pasted ten times.
+* **Aliases.** Type `rbt`, `reboot`, or `restart` and get the same reply. About 30 aliases bundled with the defaults so you do not have to remember your own shorthand.
+* **Manage Snippets dialog.** A new tray menu item that lists every snippet, filters live, and lets you edit, delete, or add from one place.
+* **Randomized responses preference.** A `RandomizeResponses` switch in `appsettings.json` and on the setup wizard's Preferences page.
+* **Forward-compatible JSON.** Old single-string entries keep working; new entries can be arrays of variants or `"@target"` aliases.
+
+### v1.0.0
+
+* First public release. Global hotkey snippet picker, dark-themed picker UI, in-app snippet editor, setup wizard with optional Windows startup integration, quiet GitHub update check, Copy Only fallback for picky ticket fields.
 
 ## What you get
 
@@ -116,6 +137,23 @@ The resulting `publish\QuickReply.exe` and `publish-setup\QuickReplySetup.exe` a
 | Copy without auto-pasting | Click **Copy Only** |
 | Dismiss the picker | Press **Esc**, click **Cancel**, or click outside |
 | Add a new snippet | Click **+ New snippet**, or use the tray menu |
+
+## Tray menu
+
+Right-click the tray icon for the full menu:
+
+| Item | What it does |
+| --- | --- |
+| Open QuickReply | Opens the picker (same as the hotkey or double-clicking the tray icon) |
+| Manage Snippets... | Opens the filterable snippet list with edit, delete, and add |
+| Add Snippet... | Opens the focused single-snippet editor |
+| Reload Snippets | Re-reads `snippets.json` from disk, no restart needed |
+| Open Snippets File | Opens `snippets.json` in your default editor |
+| Open Settings File | Opens `appsettings.json` in your default editor |
+| Check for Updates... | Hits GitHub and tells you whether there is a newer release |
+| Exit | Quits QuickReply and unregisters the global hotkey |
+
+Double-clicking the tray icon also opens the picker.
 
 ## Editing snippets
 
