@@ -119,3 +119,16 @@ at paste/copy time, not at load time, so the timestamp is current.
 - The picker form is `FormBorderStyle.None` with `CS_DROPSHADOW` and
   `WS_EX_TOOLWINDOW` in `CreateParams`. It's dismissed on `Deactivate` so
   the user can click anywhere outside to close.
+
+## Documentation style
+- The README leads with **why** QuickReply exists (the AutoHotkey-script
+  origin and reliability problems in browser-based ticket systems) before
+  it lists features or build steps. Preserve that ordering on edits.
+- Tone is practical and plainspoken. No marketing fluff, no jokes, no
+  mascot language. Examples should be real service-desk scenarios
+  (follow-ups, voicemails, reboot requests, vendor cases).
+- Do not use em dashes (`—`) or en dashes (`–`) in the README. Restructure
+  sentences with colons, commas, or periods instead.
+- Build, run, and publish commands in the README must match what actually
+  works against the current `QuickReply.csproj`. Update them when project
+  files change.

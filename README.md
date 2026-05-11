@@ -1,19 +1,61 @@
 # QuickReply
 
-A small native Windows tray app for service desk and ticket response snippets. Hit a hotkey, type a code, paste a polished reply. No bloated AutoHotkey scripts, no browser extensions, no subscriptions.
+A small Windows tray utility for service desk and support workflows. Press a hotkey, type a short code like `fu`, and paste a clean, consistent reply into your ticket.
 
-## What it does
+## Why QuickReply exists
 
-QuickReply lives in your system tray. Press **Ctrl + Alt + ;**, type a short code like `fu`, hit **Enter**, and your reply is pasted into whatever app you were working in. Built for tier-1 and tier-2 support workflows where the same 30 sentences make up most of your day.
+QuickReply started as a simple AutoHotkey script for common service desk responses. The idea was practical: type short triggers like `;fu`, `;vm`, `;close`, `;rbt` and have them expand into pre-written ticket replies, so techs would not have to retype "Following up on this ticket..." for the hundredth time that week.
 
-* Global hotkey, fully configurable
-* Borderless dark-themed picker with live preview
-* 12 quick-pick chips for your most-used snippets
-* Saves and restores your clipboard contents after paste
-* Date and time tokens in snippets (e.g. `{{date:yyyy-MM-dd}}`)
-* In-app snippet editor; no JSON wrangling required
-* Single executable, no installer
-* .NET 8, WinForms, zero third-party NuGet packages
+AutoHotkey was great for prototyping. The problem is that real ticket systems are not always plain text. Browser-based ticket UIs, rich text editors, and SLA portals do not always play nicely with hotstrings. Fields drop characters, the script stops mid-replacement, paste behavior fights the editor, or the trigger fires inside something like a code block where you do not want it. Clipboard-based replacement helped, but it always felt like duct tape. Dialog-based AHK pickers were better, but rough around the edges and still hit reliability limits in browser ticket UIs.
+
+QuickReply is the standalone version of that idea. It is a native Windows tray app that opens from a global hotkey, shows you the matching reply, and either pastes it directly or hands you a clean copy of the text for manual paste. No hotstrings to misfire. No fragile browser injection. Open, pick, paste.
+
+It is built for service desk and tier 1/2 support workflows where the same thirty or so sentences make up most of your written communication: follow-ups, voicemail notes, reboot requests, vendor case updates, escalation summaries, incident updates. The kind of writing that needs to be consistent and fast, not creative.
+
+## What you get
+
+Out of the box, QuickReply ships with the kinds of snippets a service desk tech actually uses every day. A few examples:
+
+| Code | What it says, roughly |
+| --- | --- |
+| `fu` | "Following up on this ticket. Are you still experiencing the issue?" |
+| `vm` | "I left you a voicemail and will follow up again if I do not hear back." |
+| `close` | "I am marking this ticket resolved for now. Reply here if it returns." |
+| `rbt` | "Please reboot the computer when you have a chance, then let me know." |
+| `ts` | Multi-line troubleshooting template (performed / result / next step) |
+| `esc` | Escalation summary template (issue / impact / what we need next) |
+| `vendorcase` | "We opened a case with the vendor and are waiting on their response." |
+
+The full list lives in `snippets.json`. Edit, add, rename, and reload without restarting the app.
+
+## Features
+
+* Global hotkey snippet picker (default **Ctrl + Alt + ;**, configurable)
+* User-editable `snippets.json`
+* Live preview of the reply before you paste
+* **Paste** and **Copy Only** modes for picky ticket fields
+* Dynamic date and time tokens (e.g. `{{date:yyyy-MM-dd}}`)
+* In-app snippet editor, no JSON wrangling required
+* Tray menu for reload, settings file, snippets file, exit
+* Reload snippets without restarting the app
+* Single executable, no installer, zero third-party NuGet packages
+* Designed for service desk ticket workflows
+* .NET 8, WinForms, Windows 10/11
+
+## How it works
+
+1. Press **Ctrl + Alt + ;** anywhere in Windows.
+2. The picker opens centered on your active screen, focused on the code input.
+3. Type a code like `fu`, or click one of the quick-pick chips.
+4. The matching reply previews live.
+5. Press **Enter** (or click **Paste**) to paste it into the window you came from.
+6. Or click **Copy Only** to drop the snippet on your clipboard for a manual Ctrl+V.
+
+QuickReply remembers the window you were focused on before opening the picker, restores that focus on paste, and (optionally) puts your previous clipboard contents back when it is done.
+
+### About Copy Only
+
+Some web-based ticket systems, rich text editors, and SLA portals fight programmatic paste. They strip the keystroke, double-paste, or drop the input entirely. **Copy Only** sidesteps this: it just puts the snippet on your clipboard and gets out of the way. Then you paste with Ctrl+V yourself, and the ticket field receives a normal paste event with no surprises. If a particular field gives you trouble, Copy Only is the reliable fallback.
 
 ## Quick start
 
@@ -46,8 +88,6 @@ The resulting `publish\QuickReply.exe` is everything you need.
 | Copy without auto-pasting | Click **Copy Only** |
 | Dismiss the picker | Press **Esc**, click **Cancel**, or click outside |
 | Add a new snippet | Click **+ New snippet**, or use the tray menu |
-
-The picker remembers which window you came from. After paste, focus jumps back to that window and Ctrl+V is sent automatically. If you would rather paste by hand (for picky web apps that reject programmatic paste), use **Copy Only**.
 
 ## Editing snippets
 
@@ -124,7 +164,7 @@ If you really need paste to work for elevated targets, run QuickReply itself as 
 
 **The hotkey does not open the picker**
 
-* Another app may already own `Ctrl+Alt+;`. Common culprits: Visual Studio, IDE plugins, other text expanders. Check for a balloon tip at startup; pick a different combo in `appsettings.json` and restart.
+* Another app may already own `Ctrl+Alt+;`. Common culprits: Visual Studio, IDE plugins, other text expanders. Check for a balloon tip at startup, then pick a different combo in `appsettings.json` and restart.
 * Make sure only one QuickReply is running. It enforces single instance, but a stale process might still hold the hotkey if killed forcefully. Check Task Manager.
 * The tray icon always works as a fallback: double-click it to open the picker.
 
