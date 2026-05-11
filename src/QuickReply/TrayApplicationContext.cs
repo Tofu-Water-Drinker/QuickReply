@@ -79,6 +79,7 @@ public class TrayApplicationContext : ApplicationContext
     {
         var menu = new ContextMenuStrip();
         menu.Items.Add("Open QuickReply", null, (_, _) => OpenPicker());
+        menu.Items.Add("Manage Snippets...", null, (_, _) => OpenSnippetManager());
         menu.Items.Add("Add Snippet...", null, (_, _) => OpenAddSnippet());
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add("Reload Snippets", null, (_, _) => ReloadSnippets());
@@ -191,6 +192,12 @@ public class TrayApplicationContext : ApplicationContext
     private void OpenAddSnippet()
     {
         using var dialog = new AddSnippetForm(_snippets);
+        dialog.ShowDialog();
+    }
+
+    private void OpenSnippetManager()
+    {
+        using var dialog = new SnippetManagerForm(_snippets);
         dialog.ShowDialog();
     }
 

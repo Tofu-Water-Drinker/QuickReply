@@ -14,6 +14,7 @@ internal class SetupChoices
 
     public bool RunOnStartup { get; set; } = true;
     public bool LaunchAfterInstall { get; set; } = true;
+    public bool RandomizeResponses { get; set; } = true;
 
     public static string DefaultInstallPath()
     {

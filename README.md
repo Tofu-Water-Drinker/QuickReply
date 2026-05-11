@@ -34,9 +34,12 @@ The full list lives in `snippets.json`. Edit, add, rename, and reload without re
 * User-editable `snippets.json`
 * Live preview of the reply before you paste
 * **Paste** and **Copy Only** modes for picky ticket fields
+* **Variants per code**: ship multiple ways to say the same thing under one shortcut, picked at random so replies do not sound copy-pasted
+* **Aliases**: type `rbt`, `reboot`, or `restart` and get the same reply, so you do not have to remember your own shorthand
 * Dynamic date and time tokens (e.g. `{{date:yyyy-MM-dd}}`)
-* In-app snippet editor, no JSON wrangling required
-* Tray menu for reload, settings file, snippets file, exit
+* **Manage Snippets** dialog: see, edit, delete, and add snippets from a single list
+* In-app **Add Snippet** editor with multi-variant support, no JSON wrangling required
+* Tray menu for manage, reload, settings file, snippets file, exit
 * Reload snippets without restarting the app
 * Quiet GitHub update check on startup, plus an on-demand "Check for Updates..." menu item
 * Single executable, no installer, zero third-party NuGet packages
@@ -67,8 +70,8 @@ Download `QuickReplySetup.exe` from the [latest release](https://github.com/Tofu
 1. **Welcome.** What you are installing.
 2. **Install location.** Defaults to `%LOCALAPPDATA%\Programs\QuickReply` (no admin needed). Browse to a different folder if you prefer.
 3. **Hotkey.** Keep the default `Ctrl + Alt + ;` or pick your own combination.
-4. **Snippets.** Start with the 36 included service desk snippets, start empty, or define your own in a small grid.
-5. **Windows startup.** Opt in to launch QuickReply automatically when you sign in.
+4. **Snippets.** Start with the included service-desk snippets (variants and aliases bundled), start empty, or define your own in a small grid.
+5. **Preferences.** Opt in to launching QuickReply with Windows, and choose whether responses should be randomized when a code has multiple variants.
 6. **Summary.** Review your choices.
 7. **Install.** The wizard downloads the latest `QuickReply.exe` from this repository's releases, writes `appsettings.json` and (if you chose custom) `snippets.json`, and optionally registers QuickReply under `HKCU\...\Run` for startup.
 
@@ -116,18 +119,81 @@ The resulting `publish\QuickReply.exe` and `publish-setup\QuickReplySetup.exe` a
 
 ## Editing snippets
 
-The fastest way is the **+ New snippet** button in the picker, or right-click the tray icon and choose **Add Snippet...**. The editor:
+Two in-app paths, plus a JSON file for power users.
+
+### Manage Snippets
+
+Right-click the tray icon and choose **Manage Snippets...**. You get a filterable list of everything you have, showing the code, the type (single, N variants, or alias), and a preview of the first variant. From here:
+
+* **Double-click** a row to edit it.
+* Select a row and press **Delete**, or click the **Delete** button, to remove a snippet.
+* Click **Add** to create a new one.
+* Type into the filter box to narrow the list by code or by reply text.
+
+This is the dialog to use when you want to clean up, rename, or refresh phrases you have been using for a while.
+
+### Add or edit a single snippet
+
+The **+ New snippet** button in the picker (top-right of the Quick Picks section) opens the focused single-snippet editor. So does **Add Snippet...** in the tray menu. The editor:
 
 * Detects existing codes and switches into edit mode automatically
-* Supports multi-line text directly (no escaping `\n`)
+* Supports one or many reply variants, each in its own multi-line text box
+* Has **+ Add variant** to add another, and a **Remove** button on each
 * Saves with **Ctrl + Enter**
 
-For bulk edits, open `snippets.json` directly. It lives next to `QuickReply.exe`. The format is a flat code-to-text object:
+### Reply variants
+
+Variants are different ways to say the same thing under one code. When the picker uses a code that has multiple variants, it picks one at random. This is what stops your customers from seeing the exact same paragraph on every ticket.
+
+For example, `fu` ships with eight variants. Some of them:
+
+```
+Following up on this ticket. Are you still experiencing the issue?
+Just checking in on this one. Has anything changed since we last spoke?
+Wanted to circle back on this ticket. Still seeing the issue, or are things working again?
+Touching base on this ticket. Is the issue still happening?
+```
+
+Each time you press your hotkey and use `fu`, one of these gets pasted. The match label in the picker shows `Match: fu  (8 variants, random)` so you can tell.
+
+Randomization is on by default and can be disabled in `appsettings.json` (`"RandomizeResponses": false`). With it off, the first variant is always used.
+
+### Aliases
+
+Sometimes you do not remember whether you saved a snippet as `rbt`, `reboot`, or `restart`. Aliases let all three resolve to the same reply. In `snippets.json`, an alias is just a string starting with `@`:
 
 ```json
 {
-  "fu": "Following up on this ticket. Are you still experiencing the issue?",
-  "vm": "I left you a voicemail and will follow up again if I do not hear back.",
+  "rbt": [
+    "Please reboot the computer when you have a chance.",
+    "Could you give the computer a restart when you get a moment?"
+  ],
+  "reboot": "@rbt",
+  "restart": "@rbt",
+  "rb": "@rbt"
+}
+```
+
+The defaults ship with about 30 aliases (`reboot`, `restart`, `voicemail`, `thanks`, `followup`, `checkin`, `vc`, `fyi`, and so on) so you can use whichever shorthand sticks in your head.
+
+Aliases follow each other up to 8 hops, so an alias of an alias works. Loops are detected and ignored.
+
+### snippets.json format
+
+For bulk edits or version-controlling your library, open `snippets.json` directly. It lives next to `QuickReply.exe`. The format is a flat object where each value is one of:
+
+* A string: single-variant reply
+* An array of strings: multiple variants (random selection)
+* `"@target"`: alias to another code
+
+```json
+{
+  "fu": [
+    "Following up on this ticket...",
+    "Just checking in on this one..."
+  ],
+  "ty": "Thanks for the update.",
+  "thanks": "@ty",
   "date": "{{date:yyyy-MM-dd}}"
 }
 ```
@@ -136,7 +202,7 @@ Click **Reload Snippets** in the tray menu after editing. No restart required.
 
 ### Dynamic tokens
 
-Any `{{date:FORMAT}}` placeholder is replaced with the current local date and time using a standard .NET format string (`yyyy`, `MM`, `dd`, `HH`, `h`, `mm`, `tt`, and so on). Tokens are expanded at the moment the snippet is used, not when the file is loaded, so timestamps are always current.
+Any `{{date:FORMAT}}` placeholder is replaced with the current local date and time using a standard .NET format string (`yyyy`, `MM`, `dd`, `HH`, `h`, `mm`, `tt`, and so on). Tokens are expanded at the moment the snippet is used, not when the file is loaded, so timestamps are always current. Tokens are expanded after the variant is selected, so dated snippets always show the time of paste.
 
 ## Configuration
 
@@ -150,7 +216,8 @@ Any `{{date:FORMAT}}` placeholder is replaced with the current local date and ti
   "PasteDelayMs": 150,
   "Theme": "dark",
   "Hotkey": "Ctrl+Alt+;",
-  "CheckForUpdatesOnStartup": true
+  "CheckForUpdatesOnStartup": true,
+  "RandomizeResponses": true
 }
 ```
 
@@ -163,6 +230,7 @@ Any `{{date:FORMAT}}` placeholder is replaced with the current local date and ti
 | `Theme` | `dark` (default) or anything else for system default |
 | `Hotkey` | Modifiers and key joined with `+`. See below |
 | `CheckForUpdatesOnStartup` | If `true` (default), checks GitHub for a newer release shortly after launch |
+| `RandomizeResponses` | If `true` (default), picks a random variant when a code has multiple replies. If `false`, always uses the first variant. |
 
 ### Hotkey format
 
@@ -241,8 +309,10 @@ src/QuickReply/                  the tray app
   PasteService.cs
   SnippetPickerForm.cs
   AddSnippetForm.cs
+  SnippetManagerForm.cs
   Theme.cs
   UpdateService.cs
+  snippets-defaults.json   (embedded resource: default snippet set)
   Models/AppSettings.cs
   app.manifest
 src/QuickReplySetup/             the setup wizard

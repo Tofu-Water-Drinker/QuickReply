@@ -9,11 +9,17 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <RootNamespace>QuickReply</RootNamespace>
     <AssemblyName>QuickReply</AssemblyName>
-    <Version>1.0.0</Version>
+    <Version>1.1.0</Version>
     <Product>QuickReply</Product>
     <AssemblyTitle>QuickReply</AssemblyTitle>
     <Company>QuickReply</Company>
     <Description>Service Desk Snippet Picker</Description>
   </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="snippets-defaults.json">
+      <LogicalName>QuickReply.snippets-defaults.json</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
 
 </Project>

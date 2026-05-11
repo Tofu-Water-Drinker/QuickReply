@@ -25,7 +25,7 @@ internal class Installer
         var settingsPath = Path.Combine(choices.InstallPath, "appsettings.json");
         var snippetsPath = Path.Combine(choices.InstallPath, "snippets.json");
 
-        // If an old install is running, refuse to overwrite — exe will be locked.
+        // If an old install is running, refuse to overwrite. The exe will be locked.
         if (File.Exists(exePath))
         {
             try
@@ -55,7 +55,7 @@ internal class Installer
         else
         {
             // Make sure no stale snippets.json from a previous install lingers
-            // when the user just picked "use the included defaults" — the app
+            // when the user just picked "use the included defaults". The app
             // recreates the default set on first launch when the file is absent.
             // We only delete it if the user actually chose "defaults" and a file
             // was sitting at the chosen location.
@@ -130,7 +130,8 @@ internal class Installer
             PasteDelayMs = 150,
             Theme = "dark",
             Hotkey = choices.Hotkey,
-            CheckForUpdatesOnStartup = true
+            CheckForUpdatesOnStartup = true,
+            RandomizeResponses = choices.RandomizeResponses
         };
         var json = JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true });
         File.WriteAllText(path, json);

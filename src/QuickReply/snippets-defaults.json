@@ -1,0 +1,264 @@
+{
+  "fu": [
+    "Following up on this ticket. Are you still experiencing the issue, or are we okay to close this out?",
+    "Just checking in on this one. Has anything changed since we last spoke, or are we good to close it?",
+    "Wanted to circle back on this ticket. Still seeing the issue, or are things working again?",
+    "Hi, following up to see where you stand on this. Let me know if it's resolved or still needs attention.",
+    "Touching base on this ticket. Is the issue still happening, or can we mark it resolved?",
+    "Checking back in here. Have you had a chance to test, or is the problem still present?",
+    "Following up. If everything is working now, we can close this out. Otherwise, let me know what you are still seeing.",
+    "Following up to make sure this got sorted on your end. Is the issue still happening?"
+  ],
+
+  "vm": [
+    "I left you a voicemail and will follow up again if I do not hear back.",
+    "Just left you a voicemail with an update. Let me know when you have a chance to listen, or reply here if it is easier.",
+    "Tried calling but went to voicemail. I left a message. Feel free to reply here whenever works for you.",
+    "I called and got your voicemail. Left a quick message. Happy to continue here or by phone, whichever you prefer.",
+    "Left a voicemail just now. Reply here or give me a call back when you have a moment.",
+    "Got your voicemail. Left a message with the update. Let me know if you have questions when you get a chance.",
+    "Called you but went to voicemail and left a message. Reach out here or by phone, your call.",
+    "Left you a voicemail. Reach back out via this ticket or phone whenever convenient."
+  ],
+
+  "close": [
+    "I am going to mark this ticket resolved for now. If the issue returns, reply here and we can reopen or continue troubleshooting.",
+    "Closing this ticket for now since everything seems to be working. Just reply if it comes back and we will pick it up again.",
+    "Marking this one resolved. If anything changes, reply on this ticket and we will be right back on it.",
+    "Going to close this out since the issue is resolved. Do not hesitate to reach out if it comes up again.",
+    "Resolving this ticket. If the issue resurfaces, reply here and we will reopen and continue from where we left off.",
+    "Calling this one done. If the same issue pops back up, reply here and I will pick it up again.",
+    "I will close this ticket since it appears resolved. If anything related comes up later, reply here and we will continue.",
+    "Marking this as resolved. Reply here if anything related comes back so we can keep the history together."
+  ],
+
+  "rbt": [
+    "Please reboot the computer when you have a chance, then let me know if the issue continues afterward.",
+    "Can you give the computer a restart when you get a moment? Let me know if the issue is still happening after that.",
+    "When you have a sec, please reboot the machine and test again. Let me know what you see.",
+    "Reboot the computer when convenient, then check if the issue persists. Reply here with the result.",
+    "Could you restart the computer and try again? Sometimes that resolves it. Let me know either way.",
+    "When you have a moment, please give the computer a full reboot, then test and let me know.",
+    "Try a reboot when you get a chance. After signing back in, test the issue and reply here with the outcome.",
+    "Please restart the computer at your earliest convenience. Once it is back up, test and let me know the result."
+  ],
+
+  "ty": [
+    "Thank you! I appreciate the update.",
+    "Thanks for the update, much appreciated.",
+    "Appreciate the follow-up. Thanks for letting me know.",
+    "Thanks, glad to hear it. Have a good one.",
+    "Thanks for confirming. Reach out anytime.",
+    "Appreciate that. Let me know if anything else comes up.",
+    "Thanks for the heads up. Glad we got it sorted.",
+    "Thank you for the quick response."
+  ],
+
+  "dig": [
+    "I am going to dig into this and will update you once I have more useful information.",
+    "Going to take a closer look on my end. I will get back to you as soon as I have more details.",
+    "Looking into this now. I will update you here once I have something concrete.",
+    "I will dig deeper into this and follow up as soon as I have something to share.",
+    "Researching this on my side. Will reach out once I know more.",
+    "I am investigating this now. I will send an update as soon as I have meaningful progress.",
+    "Looking into the details now. Expect an update once I have made some headway.",
+    "On it. I will update you here with whatever I find."
+  ],
+
+  "next": [
+    "The next step is for me to check a few things on our side. I will follow up here with what I find.",
+    "Next up, I am going to verify a few things on our end and then I will circle back.",
+    "From here, I will check on our side and report back with what I see.",
+    "Next step is checks on our side. I will let you know what those turn up.",
+    "I am going to look into things internally and follow up with what I learn.",
+    "Next on my list: a few checks on our infrastructure. I will update you after.",
+    "Next, I will review on our end and get back to you with what I find.",
+    "I will handle some checks on our side and follow back up with the results."
+  ],
+
+  "vendor": [
+    "This appears to be tied to a vendor-side issue. I am checking what options we have and will keep you updated.",
+    "Looks like this is on the vendor side. I am working with them now and will keep you posted.",
+    "This points to a vendor problem. I have reached out to them and will update you when I hear back.",
+    "Tracing this back to the vendor. Engaging them now and will let you know what they say.",
+    "This appears to be a vendor-related issue. I have made contact and will share their response once received.",
+    "The signs point to a vendor problem. I am in touch with them and will pass along their findings.",
+    "This is a vendor-side concern. Working with them and will keep you in the loop.",
+    "Vendor-related issue here. I will continue working with them and pass along the next steps."
+  ],
+
+  "wait": [
+    "I do not have a clean answer yet, and I do not want to guess. I am going to verify this first and then update you.",
+    "Want to make sure I give you the right answer here. Let me verify and follow up shortly.",
+    "I would rather verify than guess. Give me a moment and I will be back with a confirmed answer.",
+    "I want to confirm before I respond. I will check and get right back to you.",
+    "Rather than guess on this one, let me verify first. I will update you shortly.",
+    "Let me make sure I have the right answer before I respond. I will be back with confirmed details.",
+    "I want to double-check before answering. Sit tight and I will have an update shortly.",
+    "Verifying before I confirm anything. I will follow up with a definitive answer."
+  ],
+
+  "heads": [
+    "Heads up: we are currently looking into this. I will update this thread once we have a clearer picture of impact and next steps.",
+    "Heads up that we are investigating this now. I will keep you posted as we learn more.",
+    "FYI, we are actively looking at this. Once we have more clarity on scope and impact, I will send another update.",
+    "Quick heads up: this is on our radar. Update incoming once we have more information.",
+    "Just a quick heads up, we are aware and actively investigating. More to follow.",
+    "Heads up: we are aware of this and looking into it. Expect more details soon.",
+    "Wanted to flag this for you. We are working on it now and will follow up shortly.",
+    "Letting you know we have seen this and are investigating. More details to follow."
+  ],
+
+  "resolved": [
+    "This appears to be resolved now. We will keep an eye on it, but no further action should be needed unless the issue returns.",
+    "Looks like this is sorted. We will monitor for any recurrence, but should be all clear.",
+    "All clear on this end. Will keep watch in case it comes back.",
+    "Resolved at this point. We are monitoring just in case but expecting no further issues.",
+    "This appears fully resolved. Keeping it on our radar but no action needed right now.",
+    "Issue resolved on our end. We will watch for any recurrence.",
+    "Marking as resolved. Will check back in if anything related surfaces.",
+    "Confirmed resolved. We will keep monitoring for a bit just to be safe."
+  ],
+
+  "monitoring": [
+    "The immediate issue appears stable, but we are continuing to monitor before calling it fully resolved.",
+    "Things look stable for now, but we are keeping an eye on it before we call it done.",
+    "The system is back to normal, but we are watching closely to confirm stability.",
+    "Stable at the moment. We are monitoring for the next bit to confirm before fully resolving.",
+    "Symptoms have cleared, but we are continuing to watch for any recurrence.",
+    "Things are running normally again. We are holding off on resolution until we have confirmed it is truly stable.",
+    "Operating normally now. Monitoring continues until we are confident the fix held.",
+    "Issue is no longer presenting, but we are keeping watch just in case."
+  ],
+
+  "screenshot": [
+    "Can you send a screenshot of the error or issue when you get a chance? That will help us confirm exactly what you are seeing.",
+    "When you have a moment, could you grab a screenshot of what you are seeing? It would help me dig in.",
+    "Could you send over a screenshot of the issue? Sometimes the exact wording gives me a clue I cannot get from the description.",
+    "If you can spare a second, a screenshot of the issue would really help me troubleshoot.",
+    "A screenshot of what you are seeing would help me a lot. Send one over when you can.",
+    "Whenever convenient, please share a screenshot showing the issue. That helps me match it to known cases.",
+    "Could I get a screenshot of the error? It will help me confirm we are looking at the same thing.",
+    "If possible, send a screenshot when you have a moment. Visual context speeds things up."
+  ],
+
+  "testagain": [
+    "Can you test it again now and let me know if the behavior changed?",
+    "Could you give it another try and let me know what you see?",
+    "Try it once more and let me know if anything is different.",
+    "Mind testing again? Curious whether the behavior has shifted.",
+    "Take another shot at it and tell me how it goes.",
+    "Test it again whenever you can and report back.",
+    "When you have a moment, try once more and let me know the result.",
+    "Give it another try and reply with what you see."
+  ],
+
+  "confirmuser": [
+    "Can you confirm the username or email address affected by this issue?",
+    "Could you let me know the exact username or email impacted?",
+    "What username or email is seeing this issue? Want to make sure I am looking at the right account.",
+    "Can you share the username or email address experiencing the problem?",
+    "Please confirm which username or email is affected so I can pull the right account.",
+    "Send over the username or email tied to this issue so I can look it up on our side.",
+    "Let me know the affected username or email so I can dig into the right account.",
+    "Could you confirm the user impacted (username or email)?"
+  ],
+
+  "vendorcase": [
+    "We have opened a case with the vendor and are waiting on their response. I will update this ticket once we have more information from them.",
+    "Vendor case is open. I will relay their response as soon as we hear back.",
+    "I have engaged the vendor and we are waiting on their reply. I will update you when they respond.",
+    "Case opened with the vendor. As soon as they respond, I will pass it along.",
+    "I have reached out to the vendor and opened a case. Will share their feedback once received.",
+    "Vendor has been engaged and a case is in progress. I will update you with whatever they say next.",
+    "Working with the vendor on a case. I will forward their reply when it lands.",
+    "Vendor case is open. I will update this ticket when their team replies."
+  ],
+
+  "waitinguser": [
+    "Waiting on user response. We will continue once we hear back.",
+    "Standing by for your reply before continuing.",
+    "Holding here until we hear back from you.",
+    "Waiting for your response to move forward.",
+    "Pending your input before next steps.",
+    "Awaiting confirmation from you to proceed.",
+    "Holding until you have a chance to reply.",
+    "Will pick this back up as soon as we hear from you."
+  ],
+
+  "waitingvendor": [
+    "Waiting on vendor response. We will update once the vendor provides next steps.",
+    "Holding for vendor reply. We will move forward once they respond.",
+    "Pending vendor input. Will update when we have their answer.",
+    "Waiting on the vendor's reply before continuing.",
+    "Standing by for vendor input. We will let you know when we hear back.",
+    "Holding here until the vendor responds. Expect an update after.",
+    "Need the vendor's response to continue. We will pass it along when received.",
+    "Awaiting vendor feedback. Will update with their direction."
+  ],
+
+  "waitingapproval": [
+    "Waiting on approval before proceeding.",
+    "Standing by for approval to move forward.",
+    "Holding until we have approval to continue.",
+    "Approval pending. Will resume work once it is granted.",
+    "Need approval before next steps. Holding here.",
+    "Pending sign-off before we proceed.",
+    "Awaiting approval to continue. Will update when it lands.",
+    "Holding for the approval to move ahead."
+  ],
+
+  "date": "{{date:yyyy-MM-dd}}",
+  "time": "{{date:yyyy-MM-dd h:mm tt}}",
+
+  "ts": "Troubleshooting performed:\n- \n\nResult:\n- \n\nNext step:\n- ",
+  "note": "Issue:\n- \n\nTroubleshooting:\n- \n\nResolution / next step:\n- ",
+  "cb": "Callback requested.\nBest number:\nBest time:\nNotes:",
+  "esc": "Escalation summary:\n\nIssue:\n- \n\nImpact:\n- \n\nTroubleshooting completed:\n- \n\nWhat we need next:\n- ",
+  "impact": "Current impact:\n- \n\nKnown scope:\n- \n\nCurrent action:\n- \n\nNext update:",
+  "rootcause": "Known cause:\n- \n\nWhat happened:\n- \n\nWhat fixed it:\n- \n\nPrevention / follow-up:\n- ",
+
+  "caliente": "Caliente - Moderate impact. Localized issue or roughly 25% of users affected.",
+  "picante": "Picante - Moderate-high impact. Major system issue or roughly 50% affected or major system outage.",
+  "fuego": "Fuego - High impact. Multiple systems/clients affected or roughly 75% of users affected.",
+  "inferno": "Inferno - Critical impact. Entire company/client environment down or all users affected.",
+  "scorched": "Scorched - Escalation risk. VIP/client angry, SLA risk, or leadership visibility needed.",
+  "hellfire": "Hellfire - High impact. Multi-client or widespread impact.",
+  "meltdown": "Meltdown - Critical security impact. Security breach, ransomware, data loss, or active compromise concern.",
+  "zing": "Zing - Moderate impact. Vendor-caused or external dependency issue.",
+
+  "rebootsteps": "Please try the following when you have a chance:\n\n1. Save any open work.\n2. Restart the computer.\n3. Sign back in and test again.\n4. Reply here with whether the issue is still happening.",
+
+  "reboot": "@rbt",
+  "restart": "@rbt",
+  "rb": "@rbt",
+  "followup": "@fu",
+  "checkin": "@fu",
+  "voicemail": "@vm",
+  "leftvm": "@vm",
+  "thanks": "@ty",
+  "thx": "@ty",
+  "investigating": "@dig",
+  "looking": "@dig",
+  "verify": "@wait",
+  "doublecheck": "@wait",
+  "ss": "@screenshot",
+  "shot": "@screenshot",
+  "retest": "@testagain",
+  "tryagain": "@testagain",
+  "confirm": "@confirmuser",
+  "whichuser": "@confirmuser",
+  "vc": "@vendorcase",
+  "vendorticket": "@vendorcase",
+  "waituser": "@waitinguser",
+  "pendinguser": "@waitinguser",
+  "waitvendor": "@waitingvendor",
+  "pendingvendor": "@waitingvendor",
+  "waitapproval": "@waitingapproval",
+  "pendingapproval": "@waitingapproval",
+  "headsup": "@heads",
+  "fyi": "@heads",
+  "fixed": "@resolved",
+  "watching": "@monitoring",
+  "stable": "@monitoring"
+}

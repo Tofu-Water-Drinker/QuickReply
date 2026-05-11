@@ -29,6 +29,7 @@ public class SetupWizardForm : Form
     private RadioButton _snippetsCustomRadio = null!;
     private DataGridView _snippetsGrid = null!;
     private CheckBox _startupCheckbox = null!;
+    private CheckBox _randomizeCheckbox = null!;
     private Label _summaryLabel = null!;
     private ProgressBar _installProgress = null!;
     private Label _installStatusLabel = null!;
@@ -397,34 +398,79 @@ public class SetupWizardForm : Form
     private Page BuildStartupPage()
     {
         var panel = new Panel();
-        AddPageHeader(panel, "Run on Windows startup",
-            "QuickReply lives in the system tray and waits for the hotkey. You\n" +
-            "almost always want it running. The installer can register it now so\n" +
-            "you do not have to remember to launch it.");
+        AddPageHeader(panel, "A couple of preferences",
+            "Two small choices about how QuickReply behaves after it is installed.\n" +
+            "Both can be changed later in appsettings.json.");
 
+        // ── Windows startup ───────────────────────────────────────────────
+        var startupHeading = new Label
+        {
+            Text = "WINDOWS STARTUP",
+            Font = Theme.Caps(),
+            ForeColor = Theme.TextMuted,
+            BackColor = Theme.Bg,
+            AutoSize = true,
+            Location = new Point(0, 120)
+        };
         _startupCheckbox = new CheckBox
         {
             Text = "Start QuickReply automatically when I sign in to Windows",
             Checked = true,
             AutoSize = true,
-            Location = new Point(0, 140),
+            Location = new Point(0, 142),
             Font = Theme.BodyLg(),
             ForeColor = Theme.Text,
             BackColor = Theme.Bg,
             FlatStyle = FlatStyle.Standard
         };
-        var hint = new Label
+        var startupHint = new Label
         {
-            Text = "This writes a single value under HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run.\nNo administrator privileges are required, and you can remove it from Task Manager > Startup later.",
+            Text = "Writes a single value under HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run.\nNo admin privileges required. You can remove it from Task Manager > Startup later.",
             Font = Theme.Status(),
             ForeColor = Theme.TextDim,
             BackColor = Theme.Bg,
             AutoSize = true,
-            Location = new Point(2, 180)
+            Location = new Point(2, 172)
         };
+
+        // ── Randomized responses ──────────────────────────────────────────
+        var randomHeading = new Label
+        {
+            Text = "RANDOMIZED RESPONSES",
+            Font = Theme.Caps(),
+            ForeColor = Theme.TextMuted,
+            BackColor = Theme.Bg,
+            AutoSize = true,
+            Location = new Point(0, 232)
+        };
+        _randomizeCheckbox = new CheckBox
+        {
+            Text = "Pick a random variant each time a code has multiple replies",
+            Checked = true,
+            AutoSize = true,
+            Location = new Point(0, 254),
+            Font = Theme.BodyLg(),
+            ForeColor = Theme.Text,
+            BackColor = Theme.Bg,
+            FlatStyle = FlatStyle.Standard
+        };
+        var randomHint = new Label
+        {
+            Text = "Many of the included snippets ship with 8 different ways to say the same thing\n(\"following up\", \"checking in\", \"circling back\"...). With this enabled, customers\non different tickets see different wording instead of the exact same paragraph.\nDisable to always paste the first variant.",
+            Font = Theme.Status(),
+            ForeColor = Theme.TextDim,
+            BackColor = Theme.Bg,
+            AutoSize = true,
+            Location = new Point(2, 284)
+        };
+
+        panel.Controls.Add(startupHeading);
         panel.Controls.Add(_startupCheckbox);
-        panel.Controls.Add(hint);
-        return new Page(panel, "Step 5 of 7", "Windows startup");
+        panel.Controls.Add(startupHint);
+        panel.Controls.Add(randomHeading);
+        panel.Controls.Add(_randomizeCheckbox);
+        panel.Controls.Add(randomHint);
+        return new Page(panel, "Step 5 of 7", "Preferences");
     }
 
     private Page BuildSummaryPage()
@@ -648,8 +694,9 @@ public class SetupWizardForm : Form
                 }
                 return true;
 
-            case "Windows startup":
+            case "Preferences":
                 _choices.RunOnStartup = _startupCheckbox.Checked;
+                _choices.RandomizeResponses = _randomizeCheckbox.Checked;
                 return true;
 
             default:
@@ -672,7 +719,8 @@ public class SetupWizardForm : Form
             $"Install location:\n    {_choices.InstallPath}\n\n" +
             $"Hotkey:\n    {_choices.Hotkey}\n\n" +
             $"Snippets:\n    {snippetSummary}\n\n" +
-            $"Windows startup:\n    {(_choices.RunOnStartup ? "Yes, launch QuickReply when I sign in." : "No, I will launch QuickReply myself.")}";
+            $"Windows startup:\n    {(_choices.RunOnStartup ? "Yes, launch QuickReply when I sign in." : "No, I will launch QuickReply myself.")}\n\n" +
+            $"Randomized responses:\n    {(_choices.RandomizeResponses ? "On. Pick a random variant when a code has multiple replies." : "Off. Always paste the first variant.")}";
     }
 
     private void RefreshDone()

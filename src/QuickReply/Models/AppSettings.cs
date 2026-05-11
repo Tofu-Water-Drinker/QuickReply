@@ -9,4 +9,5 @@ public class AppSettings
     public string Theme { get; set; } = "dark";
     public string Hotkey { get; set; } = "Ctrl+Alt+;";
     public bool CheckForUpdatesOnStartup { get; set; } = true;
+    public bool RandomizeResponses { get; set; } = true;
 }

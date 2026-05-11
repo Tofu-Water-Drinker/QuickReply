@@ -47,13 +47,34 @@ When debugging via `dotnet run`, these files land in
 - `Models/AppSettings.cs` — POCO for `appsettings.json`.
 - `SettingsService.cs` — load/save `appsettings.json` with defaults.
 - `SnippetService.cs` — load/reload `snippets.json`, expand `{{date:FORMAT}}`
-  tokens. Also exposes `AddOrUpdate(code, text)` and `Contains(code)` for the
-  in-app snippet editor. Keeps the last successfully loaded snippet set if a
-  reload fails.
-- `AddSnippetForm.cs` — themed modal dialog for adding or editing a snippet.
-  Reachable from the picker's "+ New snippet" button and the tray menu's
-  "Add Snippet..." item. Detects existing codes and switches the header to
-  "Edit Snippet" mode.
+  tokens, resolve aliases, and pick variants. Each entry is a `SnippetEntry`
+  with either `Variants` (string array) or `IsAlias` + `AliasTarget`. The
+  JSON format is intentionally permissive: a value can be a string (single
+  variant), a string starting with `@` (alias pointer), or an array of
+  strings (multiple variants). On save, the service round-trips back to the
+  most natural shape per entry (string for 1 variant, array for many,
+  `"@target"` for aliases). Random variant selection uses
+  `Random.Shared.Next`, gated by the `RandomizeResponses` setting. Alias
+  resolution has a hard depth limit (8) to defend against loops.
+  Also exposes `AddOrUpdate(code, variants)`, `AddAlias`, `Remove`, and
+  `Contains`. Keeps the last successfully loaded snippet set if a reload
+  fails. Default snippets live in an embedded resource (`snippets-defaults.json`)
+  rather than an inline string so the default set can grow without bloating
+  the source file.
+- `AddSnippetForm.cs` — themed modal dialog for adding or editing one
+  snippet at a time, with full multi-variant support. Each variant is its
+  own multi-line textarea inside a card; "+ Add variant" appends another.
+  Reachable from the picker's "+ New snippet" button, the tray menu's
+  "Add Snippet..." item, and the manager's Edit button. Detects existing
+  codes and switches the header to "Edit Snippet" mode. Detects aliases
+  and shows a warning that saving will replace the alias with variants.
+- `SnippetManagerForm.cs` — themed modal dialog listing every snippet in a
+  DataGridView with columns for code, type (`single` / `N variants` /
+  `alias -> target`), and a single-line preview. Supports filter, edit
+  (opens AddSnippetForm), delete (writes back through SnippetService), and
+  add. Subscribes to `SnippetService.Reloaded` so external edits to
+  `snippets.json` show up immediately. Reachable from the tray menu's
+  "Manage Snippets..." item.
 - `HotkeyManager.cs` — wraps `RegisterHotKey` / `UnregisterHotKey` via a
   hidden message-only `NativeWindow`. Raises `HotkeyPressed` on the UI thread.
 - `ClipboardService.cs` — best-effort clipboard save/restore (text only).
@@ -116,18 +137,34 @@ When debugging via `dotnet run`, these files land in
   paste. `Copy Only` is the reliable fallback and must always work.
 
 ## Snippet JSON format
-Flat object, `code -> text`:
+Flat object, `code -> value`. Each value is one of three shapes:
 
 ```json
 {
-  "fu": "Following up on this ticket...",
-  "date": "{{date:yyyy-MM-dd}}"
+  "ty":      "Thanks for the update.",
+  "fu":      ["Following up on this ticket...", "Just checking in..."],
+  "thanks":  "@ty",
+  "reboot":  "@rbt",
+  "date":    "{{date:yyyy-MM-dd}}"
 }
 ```
 
+- **String**: single-variant reply. Backward compatible with the v1.0
+  format.
+- **Array of strings**: multi-variant reply. The picker chooses one at
+  random when `RandomizeResponses` is true, or the first one when false.
+- **`"@target"`**: alias pointing at another code. Resolution follows
+  alias chains up to 8 hops. Cycles are detected and treated as no-match.
+
 Codes are case-insensitive on lookup but stored as written. Tokens of the
 form `{{date:FORMAT}}` are expanded with `DateTime.Now.ToString(FORMAT)`
-at paste/copy time, not at load time, so the timestamp is current.
+at paste/copy time, not at load time, so the timestamp is current and is
+applied after variant selection.
+
+The default snippet set ships as `src/QuickReply/snippets-defaults.json`,
+embedded as a resource named `QuickReply.snippets-defaults.json`. The
+service reads that resource and writes it to disk on first launch when no
+`snippets.json` exists.
 
 ## Conventions
 - Keep the dependency surface minimal. Don't add NuGet packages unless

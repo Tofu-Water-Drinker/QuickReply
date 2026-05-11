@@ -417,11 +417,12 @@ public class SnippetPickerForm : Form
             return;
         }
 
-        if (_snippets.TryGet(code, out var text))
+        var randomize = _settings.Current.RandomizeResponses;
+        if (_snippets.TryResolve(code, randomize, out var text))
         {
             _previewBox.Text = text;
             _previewHint.Visible = false;
-            _matchLabel.Text = $"●  Match: {code}";
+            _matchLabel.Text = $"●  Match: {code}{DescribeEntry(code, randomize)}";
             _matchLabel.ForeColor = Theme.Success;
             _pasteButton.Enabled = true;
             _copyButton.Enabled = true;
@@ -439,10 +440,28 @@ public class SnippetPickerForm : Form
         }
     }
 
+    /// <summary>
+    /// Returns "  (alias -> rbt)" / "  (1 of 8 variants)" / "" depending on the
+    /// shape of the matched entry. Pure decoration for the match label.
+    /// </summary>
+    private string DescribeEntry(string code, bool randomize)
+    {
+        if (!_snippets.Snippets.TryGetValue(code, out var entry)) return string.Empty;
+        if (entry.IsAlias) return $"  (alias -> {entry.AliasTarget})";
+        if (entry.Variants.Length > 1)
+        {
+            return randomize
+                ? $"  ({entry.Variants.Length} variants, random)"
+                : $"  ({entry.Variants.Length} variants, using first)";
+        }
+        return string.Empty;
+    }
+
     private void DoPaste()
     {
         var code = _codeInput.Text.Trim();
-        if (!_snippets.TryGet(code, out var text))
+        var randomize = _settings.Current.RandomizeResponses;
+        if (!_snippets.TryResolve(code, randomize, out var text))
         {
             ShowStatus($"No snippet found for \"{code}\".", Theme.Danger);
             return;
@@ -461,7 +480,8 @@ public class SnippetPickerForm : Form
     private void DoCopyOnly()
     {
         var code = _codeInput.Text.Trim();
-        if (!_snippets.TryGet(code, out var text))
+        var randomize = _settings.Current.RandomizeResponses;
+        if (!_snippets.TryResolve(code, randomize, out var text))
         {
             ShowStatus($"No snippet found for \"{code}\".", Theme.Danger);
             return;
