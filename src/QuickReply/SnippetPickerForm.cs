@@ -499,7 +499,7 @@ public class SnippetPickerForm : Form
 
         if (IsSignatureCode(code))
         {
-            var html = _signatures.GetHtml();
+            var html = _signatures.GetHtmlForPaste();
             var plain = _signatures.GetPlainText();
             var prevSig = PreviousWindow;
             var prevSigCtrl = PreviousFocusedControl;
@@ -545,7 +545,7 @@ public class SnippetPickerForm : Form
 
         if (IsSignatureCode(code))
         {
-            var html = _signatures.GetHtml();
+            var html = _signatures.GetHtmlForPaste();
             var plain = _signatures.GetPlainText();
             if (ClipboardService.SetRichText(html, plain))
             {

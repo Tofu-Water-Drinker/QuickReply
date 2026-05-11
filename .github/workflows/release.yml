@@ -1,0 +1,93 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore QuickReply.sln
+
+      - name: Verify version matches tag
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}"  # e.g. v1.4.0
+          $expected = $tag.TrimStart('v')
+          $appVersion = (Select-Xml -Path src/QuickReply/QuickReply.csproj -XPath "/Project/PropertyGroup/Version").Node.InnerText
+          $setupVersion = (Select-Xml -Path src/QuickReplySetup/QuickReplySetup.csproj -XPath "/Project/PropertyGroup/Version").Node.InnerText
+          if ($appVersion -ne $expected) {
+            throw "QuickReply.csproj <Version>$appVersion</Version> does not match tag $tag (expected $expected)."
+          }
+          if ($setupVersion -ne $expected) {
+            throw "QuickReplySetup.csproj <Version>$setupVersion</Version> does not match tag $tag (expected $expected)."
+          }
+          Write-Host "Versions match tag: $tag"
+
+      - name: Publish QuickReply.exe
+        run: >
+          dotnet publish src/QuickReply/QuickReply.csproj
+          -c Release -r win-x64
+          --self-contained true
+          -p:PublishSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -o artifacts/QuickReply
+
+      - name: Publish QuickReplySetup.exe
+        run: >
+          dotnet publish src/QuickReplySetup/QuickReplySetup.csproj
+          -c Release -r win-x64
+          --self-contained true
+          -p:PublishSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -o artifacts/QuickReplySetup
+
+      - name: Stage release artifacts with SHA256
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path release-assets | Out-Null
+          Copy-Item artifacts/QuickReply/QuickReply.exe          release-assets/QuickReply.exe
+          Copy-Item artifacts/QuickReplySetup/QuickReplySetup.exe release-assets/QuickReplySetup.exe
+
+          $hashApp = (Get-FileHash release-assets/QuickReply.exe -Algorithm SHA256).Hash.ToLower()
+          $hashSetup = (Get-FileHash release-assets/QuickReplySetup.exe -Algorithm SHA256).Hash.ToLower()
+
+          # Just the hash on a line by itself. The installer downloads the .sha256
+          # sidecar, trims whitespace, and compares.
+          Set-Content -Path release-assets/QuickReply.exe.sha256          -Value $hashApp
+          Set-Content -Path release-assets/QuickReplySetup.exe.sha256     -Value $hashSetup
+
+          # Also write a combined SHASUMS file for humans.
+          @(
+            "$hashApp  QuickReply.exe"
+            "$hashSetup  QuickReplySetup.exe"
+          ) | Set-Content -Path release-assets/SHA256SUMS.txt
+
+          Write-Host "QuickReply.exe        SHA256 $hashApp"
+          Write-Host "QuickReplySetup.exe   SHA256 $hashSetup"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ github.ref_name }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: |
+            release-assets/QuickReply.exe
+            release-assets/QuickReply.exe.sha256
+            release-assets/QuickReplySetup.exe
+            release-assets/QuickReplySetup.exe.sha256
+            release-assets/SHA256SUMS.txt

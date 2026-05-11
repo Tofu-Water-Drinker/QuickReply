@@ -3,11 +3,29 @@
 A small Windows tray utility for service desk and support workflows. Press a hotkey, type a short code like `fu`, and paste a clean, consistent reply into your ticket.
 
 [![Latest release](https://img.shields.io/github/v/release/Tofu-Water-Drinker/QuickReply?label=latest&color=6366f1)](https://github.com/Tofu-Water-Drinker/QuickReply/releases/latest)
+[![Build](https://img.shields.io/github/actions/workflow/status/Tofu-Water-Drinker/QuickReply/build.yml?branch=main&label=build&color=6366f1)](https://github.com/Tofu-Water-Drinker/QuickReply/actions/workflows/build.yml)
 [![Downloads](https://img.shields.io/github/downloads/Tofu-Water-Drinker/QuickReply/total?color=6366f1)](https://github.com/Tofu-Water-Drinker/QuickReply/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-6366f1)](LICENSE)
 ![Windows](https://img.shields.io/badge/Windows-10%2F11-6366f1?logo=windows&logoColor=white)
 ![.NET 8](https://img.shields.io/badge/.NET-8-6366f1?logo=dotnet&logoColor=white)
 
-> **v1.3.0** added a first-launch tutorial and an in-app Settings dialog, so you never need to open a JSON file to change behavior. [Grab the installer.](https://github.com/Tofu-Water-Drinker/QuickReply/releases/latest/download/QuickReplySetup.exe)
+> Latest release: see the [releases page](https://github.com/Tofu-Water-Drinker/QuickReply/releases/latest). Each release ships `QuickReply.exe`, `QuickReplySetup.exe`, and SHA256 sidecar files. The installer verifies the SHA256 of the binary it downloads before launching it. [Grab the installer.](https://github.com/Tofu-Water-Drinker/QuickReply/releases/latest/download/QuickReplySetup.exe)
+
+## Screenshots
+
+The picker:
+
+![Picker screenshot](docs/screenshots/picker.png)
+
+The Manage Snippets dialog:
+
+![Manage screenshot](docs/screenshots/manage.png)
+
+The Signature editor with live preview:
+
+![Signature editor screenshot](docs/screenshots/signature.png)
+
+> If these images are missing, the project has not finished its first packaging pass with screenshots. The app is otherwise the same.
 
 ## Why QuickReply exists
 
@@ -15,38 +33,88 @@ QuickReply started as a simple AutoHotkey script for common service desk respons
 
 AutoHotkey was great for prototyping. The problem is that real ticket systems are not always plain text. Browser-based ticket UIs, rich text editors, and SLA portals do not always play nicely with hotstrings. Fields drop characters, the script stops mid-replacement, paste behavior fights the editor, or the trigger fires inside something like a code block where you do not want it. Clipboard-based replacement helped, but it always felt like duct tape. Dialog-based AHK pickers were better, but rough around the edges and still hit reliability limits in browser ticket UIs.
 
-QuickReply is the standalone version of that idea. It is a native Windows tray app that opens from a global hotkey, shows you the matching reply, and either pastes it directly or hands you a clean copy of the text for manual paste. No hotstrings to misfire. No fragile browser injection. Open, pick, paste.
+QuickReply is the standalone version of that idea. It is a native Windows tray app that opens from a global hotkey, shows you the matching reply, and either pastes it directly or hands you a clean copy for manual paste. No hotstrings to misfire. No fragile browser injection. Open, pick, paste.
 
-It is built for service desk and tier 1/2 support workflows where the same thirty or so sentences make up most of your written communication: follow-ups, voicemail notes, reboot requests, vendor case updates, escalation summaries, incident updates. The kind of writing that needs to be consistent and fast, not creative.
+## Security and privacy
+
+QuickReply is the kind of app people are right to be careful about: it registers a global hotkey, reads and writes the clipboard, sends synthetic Ctrl+V, and can run at startup. So here is exactly what it does and does not do.
+
+**What it does**
+
+* Registers exactly one global hotkey (default `Ctrl+Alt+;`, configurable).
+* Reads the clipboard before a paste, and writes back what it found afterward.
+* Sends Ctrl+V to the foreground window when AutoPaste is on.
+* Pings `api.github.com/repos/Tofu-Water-Drinker/QuickReply/releases/latest` on startup to check for a newer release. This is the only network call. Turn it off in Settings.
+* Optionally writes one registry value under `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` so the tray app launches at sign-in.
+* Stores `snippets.json`, `appsettings.json`, and `signature.html` under `%APPDATA%\QuickReply` (or next to the EXE in portable mode).
+
+**What it does not do**
+
+* No telemetry. No analytics. No crash reports phoned home.
+* No snippet sync. Your replies never leave the machine.
+* No automatic self-update. The startup check tells you a release exists, then gets out of the way. You decide when to upgrade.
+* No second hotkey, no keyboard logging, no clipboard logging.
+* No third-party NuGet packages. The supply-chain surface is `System.*`, `Microsoft.Win32.*`, and Win32 P/Invoke.
+
+**Release verification**
+
+Every release ships:
+
+* `QuickReply.exe` and `QuickReply.exe.sha256`
+* `QuickReplySetup.exe` and `QuickReplySetup.exe.sha256`
+* `SHA256SUMS.txt` (both hashes in one file, human-readable)
+
+The installer downloads `QuickReply.exe.sha256` from the same release, hashes the EXE on the way to disk, and aborts the install if the hashes do not match. You can verify the installer the same way before running it:
+
+```pwsh
+Get-FileHash .\QuickReplySetup.exe -Algorithm SHA256
+# Compare to QuickReplySetup.exe.sha256 from the release page.
+```
+
+Release artifacts are produced by [`.github/workflows/release.yml`](.github/workflows/release.yml) on a Windows GitHub Actions runner, on tag push. The workflow itself is in this repo and uses no third-party Actions beyond the official `actions/checkout`, `actions/setup-dotnet`, and `softprops/action-gh-release`.
+
+**Signature HTML safe mode**
+
+The signature feature lets you author arbitrary HTML and paste it into your ticket / email tool. Safe mode is on by default and strips `<script>`, `<iframe>`, `<object>`, `<embed>`, event-handler attributes, and `javascript:` URLs before the HTML touches the clipboard. The Signature editor shows a live banner when the sanitizer plans to change something. You can disable safe mode in Settings if you know what you are doing.
+
+**Authenticode signing**
+
+The current binaries are not Authenticode-signed (open-source code-signing certificates are not free or self-service). Windows SmartScreen may show a "publisher: Unknown" warning the first time you run them. If this is a blocker for your environment, build from source. Signing infrastructure is on the roadmap.
 
 ## What's new
 
-### v1.3.0 (current)
+### v1.4.0
 
-* **First-launch tutorial.** A 5-page tour runs automatically the first time you start QuickReply. Covers the hotkey, what ships with the app (snippets, variants, aliases, signature), and how to manage everything from the tray. Skip button on every page; the flag that suppresses replays is `TutorialShown` in `appsettings.json`.
-* **Replay the tutorial any time.** New `Show Tutorial...` item in the tray menu.
-* **In-app Settings dialog.** New `Settings...` tray menu item opens a GUI for every field in `appsettings.json`: hotkey, paste delays, AutoPaste, randomization, signature code, update check. No more editing the JSON by hand.
-* **Live hotkey re-registration.** Change your hotkey in Settings, click Save, and the new combo is live immediately. If the new combo is already taken by another app, QuickReply rolls back to the previous hotkey and tells you.
-* **Reset to defaults** button in Settings restores every field to its built-in value (your snippets and signature stay untouched).
+* **Data lives in `%APPDATA%\QuickReply` by default.** `snippets.json`, `appsettings.json`, and `signature.html` no longer have to share a folder with `QuickReply.exe`. The runtime auto-migrates any pre-1.4 files it finds next to the EXE.
+* **Portable mode.** Drop a `portable.flag` file next to the EXE (or check the box in the setup wizard) and QuickReply keeps everything in the install folder, USB-stick style.
+* **Installer SHA256 verification.** The setup wizard fetches `QuickReply.exe.sha256` from the same release as the binary and refuses to launch a download whose hash does not match.
+* **Full clipboard preservation.** "Restore clipboard after paste" now snapshots HTML, RTF, text, images, and file drop lists, not just plain text. Earlier versions silently destroyed everything except text.
+* **Snippet validation reporting.** `snippets.json` entries with the wrong shape (null, number, object, bool, empty variants) are now reported in a single grouped warning instead of being silently dropped.
+* **Signature safe mode.** HTML signatures pass through a sanitizer (scripts, iframes, event handlers, `javascript:` URLs) before they hit the clipboard. The Signature editor surfaces a banner when the sanitizer plans to change something.
+* **GitHub Actions release pipeline.** Releases are built on `windows-latest`, ship deterministic hashes, and include both binaries plus their `.sha256` sidecars.
+* **License.** MIT.
+* **AGENTS.md.** Contributor and code-agent guide so this repo does not drift on the next round of changes.
+
+### v1.3.0
+
+* **First-launch tutorial** (5 pages, skippable) and an in-app **Settings dialog** so you never need to open `appsettings.json` by hand. Tray menu adds "Settings..." and "Show Tutorial...".
 
 ### v1.2.x
 
 * **v1.2.3** Hotkey is now a toggle: press once to open the picker, press again to close.
-* **v1.2.2** Inner-control focus restore for ConnectWise Manage and other apps where the outer window regaining foreground does not auto-restore keyboard focus to the email field.
-* **v1.2.1** Reliable focus restore before paste, via the AttachThreadInput trick and a deferred-paste BeginInvoke.
-* **v1.2.0** Signature with rich paste: dedicated `signature.html`, side-by-side HTML editor with live preview, embedded base64 images, three preset templates, and tray menu shortcuts (`Edit Signature...`, `Copy Signature`).
+* **v1.2.2** Inner-control focus restore for ConnectWise Manage and other apps where the outer window regaining foreground does not auto-restore keyboard focus.
+* **v1.2.1** Reliable focus restore before paste, via the AttachThreadInput trick and deferred-paste BeginInvoke.
+* **v1.2.0** Rich-text signature with HTML editor, live preview, embedded base64 images, three preset templates.
 
 ### v1.1.0
 
-* **Reply variants.** Each conversational code ships with eight different ways to say the same thing. The picker chooses one at random so customers on different tickets see different wording instead of the same paragraph copy-pasted ten times.
-* **Aliases.** Type `rbt`, `reboot`, or `restart` and get the same reply. About 30 aliases bundled with the defaults so you do not have to remember your own shorthand.
-* **Manage Snippets dialog.** A new tray menu item that lists every snippet, filters live, and lets you edit, delete, or add from one place.
-* **Randomized responses preference.** A `RandomizeResponses` switch in `appsettings.json` and on the setup wizard's Preferences page.
-* **Forward-compatible JSON.** Old single-string entries keep working; new entries can be arrays of variants or `"@target"` aliases.
+* **Reply variants.** Each conversational code ships with up to eight different ways to say the same thing; the picker chooses one at random.
+* **Aliases.** Type `rbt`, `reboot`, or `restart` and get the same reply.
+* **Manage Snippets dialog.** Filterable list with edit, delete, add.
 
 ### v1.0.0
 
-* First public release. Global hotkey snippet picker, dark-themed picker UI, in-app snippet editor, setup wizard with optional Windows startup integration, quiet GitHub update check, Copy Only fallback for picky ticket fields.
+* First public release.
 
 ## What you get
 
@@ -62,25 +130,24 @@ Out of the box, QuickReply ships with the kinds of snippets a service desk tech 
 | `esc` | Escalation summary template (issue / impact / what we need next) |
 | `vendorcase` | "We opened a case with the vendor and are waiting on their response." |
 
-The full list lives in `snippets.json`. Edit, add, rename, and reload without restarting the app.
+Edit, add, rename, and reload without restarting the app.
 
 ## Features
 
 * Global hotkey snippet picker (default **Ctrl + Alt + ;**, configurable)
-* User-editable `snippets.json`
-* Live preview of the reply before you paste
-* **Paste** and **Copy Only** modes for picky ticket fields
-* **Variants per code**: ship multiple ways to say the same thing under one shortcut, picked at random so replies do not sound copy-pasted
-* **Aliases**: type `rbt`, `reboot`, or `restart` and get the same reply, so you do not have to remember your own shorthand
-* **Rich-text signature** with HTML editor, live preview, embedded images, and three preset templates. Pastes as HTML in apps that support it, plain text everywhere else.
-* Dynamic date and time tokens (e.g. `{{date:yyyy-MM-dd}}`)
-* **Manage Snippets** dialog: see, edit, delete, and add snippets from a single list
-* In-app **Add Snippet** editor with multi-variant support, no JSON wrangling required
-* Tray menu for manage, reload, settings file, snippets file, exit
-* Reload snippets without restarting the app
-* Quiet GitHub update check on startup, plus an on-demand "Check for Updates..." menu item
-* Single executable, no installer, zero third-party NuGet packages
-* Designed for service desk ticket workflows
+* **Paste** and **Copy Only** modes. Copy Only is the always-safe path for picky web apps.
+* **Variants per code** with randomization, so replies do not sound copy-pasted
+* **Aliases** so you can use any shorthand that sticks in your head
+* **Rich-text signature** with HTML editor, live preview, embedded images, three preset templates, and a safe-mode HTML sanitizer
+* Dynamic date and time tokens (`{{date:yyyy-MM-dd}}`)
+* **Manage Snippets** dialog: see, edit, delete, and add snippets from one list
+* **In-app Settings GUI** (no need to edit `appsettings.json` by hand)
+* First-launch **tutorial** (skippable, replayable from the tray menu)
+* Tray menu, reload without restart, open data folder
+* Quiet GitHub update check on startup, on-demand "Check for Updates..."
+* **Full clipboard preservation** across HTML, RTF, text, images, file lists
+* **Portable mode** (drop `portable.flag` next to the EXE)
+* Single executable, zero third-party NuGet packages, no telemetry
 * .NET 8, WinForms, Windows 10/11
 
 ## How it works
@@ -92,35 +159,35 @@ The full list lives in `snippets.json`. Edit, add, rename, and reload without re
 5. Press **Enter** (or click **Paste**) to paste it into the window you came from.
 6. Or click **Copy Only** to drop the snippet on your clipboard for a manual Ctrl+V.
 
-QuickReply remembers the window you were focused on before opening the picker, restores that focus on paste, and (optionally) puts your previous clipboard contents back when it is done.
+QuickReply remembers the window and the inner text-box that had focus before opening the picker, restores both before sending Ctrl+V, and (optionally) puts your previous clipboard contents back when it is done.
 
-### About Copy Only
+### When to use Copy Only
 
-Some web-based ticket systems, rich text editors, and SLA portals fight programmatic paste. They strip the keystroke, double-paste, or drop the input entirely. **Copy Only** sidesteps this: it just puts the snippet on your clipboard and gets out of the way. Then you paste with Ctrl+V yourself, and the ticket field receives a normal paste event with no surprises. If a particular field gives you trouble, Copy Only is the reliable fallback.
+AutoPaste is best-effort. It works in most native and web apps, but some browser-based ticket systems, rich-text editors, and SLA portals intercept programmatic paste. They strip the keystroke, double-paste, or drop the input entirely.
+
+**Copy Only sidesteps all of that.** It puts the snippet on your clipboard and gets out of the way. You paste with Ctrl+V yourself; the ticket field sees a normal user paste. If a particular field gives you trouble, Copy Only is the reliable fallback and is recommended for any system that has misbehaved on you before.
 
 ## Install
 
-### Option 1: Run the setup wizard (recommended for end users)
+### Option 1: Run the setup wizard (recommended)
 
 Download `QuickReplySetup.exe` from the [latest release](https://github.com/Tofu-Water-Drinker/QuickReply/releases/latest) and double-click it. The wizard walks you through:
 
 1. **Welcome.** What you are installing.
-2. **Install location.** Defaults to `%LOCALAPPDATA%\Programs\QuickReply` (no admin needed). Browse to a different folder if you prefer.
-3. **Hotkey.** Keep the default `Ctrl + Alt + ;` or pick your own combination.
-4. **Snippets.** Start with the included service-desk snippets (variants and aliases bundled), start empty, or define your own in a small grid.
-5. **Preferences.** Opt in to launching QuickReply with Windows, and choose whether responses should be randomized when a code has multiple variants.
+2. **Install location.** Defaults to `%LOCALAPPDATA%\Programs\QuickReply` (no admin needed).
+3. **Hotkey.** Keep the default `Ctrl + Alt + ;` or pick your own.
+4. **Snippets.** Use the included set, start empty, or define your own in a small grid.
+5. **Preferences.** Windows startup, randomized variants, and **portable mode** (keeps all data next to the EXE instead of in `%APPDATA%`).
 6. **Summary.** Review your choices.
-7. **Install.** The wizard downloads the latest `QuickReply.exe` from this repository's releases, writes `appsettings.json` and (if you chose custom) `snippets.json`, and optionally registers QuickReply under `HKCU\...\Run` for startup.
-
-After install, the wizard offers to launch QuickReply right away. Press your hotkey and you are off.
+7. **Install.** Downloads the latest `QuickReply.exe` from this repository's releases, verifies its SHA256 against the release's `.sha256` sidecar, then writes your settings.
 
 ### Option 2: Plain download
 
-If you do not want the wizard, grab `QuickReply.exe` directly from the [latest release](https://github.com/Tofu-Water-Drinker/QuickReply/releases/latest) and drop it anywhere. On first launch it creates `snippets.json` and `appsettings.json` next to itself with the defaults.
+Grab `QuickReply.exe` directly from the [latest release](https://github.com/Tofu-Water-Drinker/QuickReply/releases/latest), verify its hash against the release's `QuickReply.exe.sha256`, and drop the EXE anywhere. On first launch it creates `snippets.json`, `appsettings.json`, and `signature.html` under `%APPDATA%\QuickReply` with the defaults.
 
 ### Option 3: Build from source
 
-Requires the .NET 8 SDK (or newer with the .NET 8 targeting pack).
+Requires the .NET 8 SDK.
 
 ```bash
 git clone https://github.com/Tofu-Water-Drinker/QuickReply.git
@@ -129,29 +196,27 @@ dotnet build QuickReply.sln -c Release
 dotnet run --project src/QuickReply/QuickReply.csproj -c Release
 ```
 
-Then press **Ctrl + Alt + ;**, type `fu`, and press Enter.
-
-To build the portable single-file executables you can ship to other machines:
+To produce the single-file binaries that ship in a release:
 
 ```bash
-# The main app
-dotnet publish src/QuickReply/QuickReply.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
+dotnet publish src/QuickReply/QuickReply.csproj -c Release -r win-x64 \
+  --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true \
+  -o publish
 
-# The setup wizard (downloads the main app from GitHub releases at install time)
-dotnet publish src/QuickReplySetup/QuickReplySetup.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish-setup
+dotnet publish src/QuickReplySetup/QuickReplySetup.csproj -c Release -r win-x64 \
+  --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true \
+  -o publish-setup
 ```
-
-The resulting `publish\QuickReply.exe` and `publish-setup\QuickReplySetup.exe` are everything you need.
 
 ## Using the picker
 
 | Action | How |
 | --- | --- |
 | Open the picker | Press the global hotkey, or double-click the tray icon |
+| Close the picker | Press the global hotkey again, press **Esc**, or click outside |
 | Set the code | Type it, or click a quick-pick chip |
 | Paste into the previous window | Press **Enter** or click **Paste** |
 | Copy without auto-pasting | Click **Copy Only** |
-| Dismiss the picker | Press **Esc**, click **Cancel**, or click outside |
 | Add a new snippet | Click **+ New snippet**, or use the tray menu |
 
 ## Tray menu
@@ -164,111 +229,79 @@ Right-click the tray icon for the full menu:
 | Manage Snippets... | Opens the filterable snippet list with edit, delete, and add |
 | Add Snippet... | Opens the focused single-snippet editor |
 | Edit Signature... | Opens the HTML signature editor with live preview |
-| Copy Signature | Puts your signature on the clipboard (rich HTML + plain text fallback) without opening the picker |
+| Copy Signature | Puts your signature on the clipboard (rich HTML + plain text fallback) |
 | Reload Snippets | Re-reads `snippets.json` from disk, no restart needed |
 | Open Snippets File | Opens `snippets.json` in your default editor |
 | Open Settings File | Opens `appsettings.json` in your default editor |
-| Settings... | Opens the in-app Settings dialog (hotkey, paste delays, randomization, signature code, update check) |
+| Settings... | Opens the in-app Settings dialog (all of `appsettings.json`, plus open-data-folder) |
 | Show Tutorial... | Replays the first-launch tutorial |
 | Check for Updates... | Hits GitHub and tells you whether there is a newer release |
 | Exit | Quits QuickReply and unregisters the global hotkey |
 
-Double-clicking the tray icon also opens the picker.
+## Where data lives
+
+By default:
+
+* `%APPDATA%\QuickReply\snippets.json`
+* `%APPDATA%\QuickReply\appsettings.json`
+* `%APPDATA%\QuickReply\signature.html`
+
+This is the right place for a per-user Windows app: it survives reinstalls, works under managed Program Files installs, and roams in domain profiles that have profile roaming enabled.
+
+**Portable mode.** If a file literally named `portable.flag` exists next to `QuickReply.exe`, all three files live next to the EXE instead. This is the USB-stick / single-folder workflow. The setup wizard's Preferences page has a checkbox for this; you can also toggle it manually by adding or removing the flag file and restarting QuickReply.
+
+**Migration.** If you upgrade from v1.3 or earlier and you have data files sitting next to your `QuickReply.exe`, QuickReply will copy them into `%APPDATA%\QuickReply` on first launch. The originals stay where they are; nothing is destroyed.
 
 ## Editing snippets
 
-Two in-app paths, plus a JSON file for power users.
+### Manage Snippets dialog
 
-### Manage Snippets
-
-Right-click the tray icon and choose **Manage Snippets...**. You get a filterable list of everything you have, showing the code, the type (single, N variants, or alias), and a preview of the first variant. From here:
-
-* **Double-click** a row to edit it.
-* Select a row and press **Delete**, or click the **Delete** button, to remove a snippet.
-* Click **Add** to create a new one.
-* Type into the filter box to narrow the list by code or by reply text.
-
-This is the dialog to use when you want to clean up, rename, or refresh phrases you have been using for a while.
+Right-click the tray icon and choose **Manage Snippets...**. You get a filterable list of everything you have, showing the code, the type (single, N variants, or alias), and a preview of the first variant. Double-click a row to edit, select and press Delete to remove, click Add to create one.
 
 ### Add or edit a single snippet
 
-The **+ New snippet** button in the picker (top-right of the Quick Picks section) opens the focused single-snippet editor. So does **Add Snippet...** in the tray menu. The editor:
-
-* Detects existing codes and switches into edit mode automatically
-* Supports one or many reply variants, each in its own multi-line text box
-* Has **+ Add variant** to add another, and a **Remove** button on each
-* Saves with **Ctrl + Enter**
+The **+ New snippet** button in the picker (top-right of the Quick Picks section) opens the focused single-snippet editor. Detects existing codes and switches into edit mode automatically. Saves with **Ctrl + Enter**.
 
 ### Reply variants
 
-Variants are different ways to say the same thing under one code. When the picker uses a code that has multiple variants, it picks one at random. This is what stops your customers from seeing the exact same paragraph on every ticket.
-
-For example, `fu` ships with eight variants. Some of them:
-
-```
-Following up on this ticket. Are you still experiencing the issue?
-Just checking in on this one. Has anything changed since we last spoke?
-Wanted to circle back on this ticket. Still seeing the issue, or are things working again?
-Touching base on this ticket. Is the issue still happening?
-```
-
-Each time you press your hotkey and use `fu`, one of these gets pasted. The match label in the picker shows `Match: fu  (8 variants, random)` so you can tell.
-
-Randomization is on by default and can be disabled in `appsettings.json` (`"RandomizeResponses": false`). With it off, the first variant is always used.
+Variants are different ways to say the same thing under one code. With randomization on (default), the picker chooses one variant at random each time, so customers do not see identical paragraphs across tickets. Turn randomization off in Settings to always use the first variant.
 
 ### Aliases
 
-Sometimes you do not remember whether you saved a snippet as `rbt`, `reboot`, or `restart`. Aliases let all three resolve to the same reply. In `snippets.json`, an alias is just a string starting with `@`:
+In `snippets.json`, an alias is a string starting with `@`:
 
 ```json
 {
-  "rbt": [
-    "Please reboot the computer when you have a chance.",
-    "Could you give the computer a restart when you get a moment?"
-  ],
+  "rbt": ["Please reboot the computer when you have a chance."],
   "reboot": "@rbt",
-  "restart": "@rbt",
-  "rb": "@rbt"
+  "restart": "@rbt"
 }
 ```
 
-The defaults ship with about 30 aliases (`reboot`, `restart`, `voicemail`, `thanks`, `followup`, `checkin`, `vc`, `fyi`, and so on) so you can use whichever shorthand sticks in your head.
+Aliases follow each other up to 8 hops. Loops are detected and ignored.
 
-Aliases follow each other up to 8 hops, so an alias of an alias works. Loops are detected and ignored.
+### Signature (rich text)
 
-### Signature
+QuickReply ships with a separate signature feature for the styled block at the bottom of ticket replies. The signature pastes as **rich HTML** in apps that support it (Outlook, Gmail web, Teams, ServiceNow rich-text fields) and falls back to plain text in apps that do not.
 
-QuickReply ships with a separate signature feature for the styled, image-bearing block you put at the bottom of ticket replies. Unlike snippets (plain text), the signature pastes as **rich HTML** in apps that support it (Outlook, Gmail web, Teams, ServiceNow rich-text fields) and falls back to plain text in apps that do not.
-
-**Storage.** The signature lives in `signature.html` next to `QuickReply.exe`. First launch creates it from the default template; you edit it in place.
-
-**Editing.** Right-click the tray icon and choose **Edit Signature...**. The editor has two panes:
-
-* **HTML editor** on the left. You can write standard HTML with inline `style="..."` attributes for fonts, colors, sizing, links, and tables.
-* **Live preview** on the right, using the system's HTML renderer. What you see is what gets pasted.
-
-The toolbar has:
-
-* **Insert image...** Picks a file (PNG, JPG, GIF, BMP) and embeds it as a base64 data URI inside an `<img>` tag, so the signature is self-contained.
-* **Templates...** Switches to one of three preset templates: Default (with contact info), Minimal, or With Logo (placeholder block).
-* **Reset to default** Wipes your edits and restores the default template.
+* **Storage.** `signature.html` in the data folder.
+* **Editing.** Right-click the tray icon, choose **Edit Signature...**. HTML editor on the left, live preview on the right.
+* **Insert image.** Picks a file (PNG, JPG, GIF, BMP) and embeds it as a base64 data URI inside an `<img>` tag.
+* **Templates.** Default, Minimal, With logo placeholder.
+* **Safe mode.** On by default. Strips `<script>`, `<iframe>`, `<object>`, `<embed>`, event-handler attributes, and `javascript:` URLs before the signature touches the clipboard. The editor shows a banner when the sanitizer plans to change something.
 
 **Using the signature.** Two paths:
 
-* **From the picker.** Press your hotkey, type `sig`, press Enter. The match label shows `Match: sig  (signature, rich paste)`. The picker remembers the previous window, restores focus, and sends Ctrl+V. The active app receives both HTML and plain text on the clipboard.
-* **Copy Signature tray item.** One click. Puts the rich signature on your clipboard. You paste with Ctrl+V yourself. Useful when you want to paste into a window the picker did not capture.
-
-**Changing the code.** If `sig` clashes with one of your own snippets, change `SignatureCode` in `appsettings.json` to anything you prefer (`signature`, `mysig`, `s`).
-
-**Images and size.** Images are embedded as base64, which inflates them by about 33%. For email signatures, a logo under 50 KB is usually fine. The editor flags signatures over ~200 KB so you can decide whether to compress.
+* From the picker, type `sig` (or whatever `SignatureCode` is set to) and press Enter. The picker pastes both HTML and plain text.
+* **Copy Signature** in the tray menu. One click, puts the rich signature on your clipboard. You paste with Ctrl+V yourself.
 
 ### snippets.json format
 
-For bulk edits or version-controlling your library, open `snippets.json` directly. It lives next to `QuickReply.exe`. The format is a flat object where each value is one of:
+Each value is one of:
 
-* A string: single-variant reply
-* An array of strings: multiple variants (random selection)
-* `"@target"`: alias to another code
+* A string: single-variant reply.
+* An array of strings: multiple variants (random selection).
+* `"@target"`: alias to another code.
 
 ```json
 {
@@ -282,15 +315,15 @@ For bulk edits or version-controlling your library, open `snippets.json` directl
 }
 ```
 
-Click **Reload Snippets** in the tray menu after editing. No restart required.
+Click **Reload Snippets** in the tray menu after editing. Entries with the wrong shape (null, number, object, bool, empty variants) are reported in a single warning so you know exactly what got skipped.
 
 ### Dynamic tokens
 
-Any `{{date:FORMAT}}` placeholder is replaced with the current local date and time using a standard .NET format string (`yyyy`, `MM`, `dd`, `HH`, `h`, `mm`, `tt`, and so on). Tokens are expanded at the moment the snippet is used, not when the file is loaded, so timestamps are always current. Tokens are expanded after the variant is selected, so dated snippets always show the time of paste.
+Any `{{date:FORMAT}}` placeholder is replaced with the current local date/time using a standard .NET format string. Tokens expand at paste time, not load time.
 
 ## Configuration
 
-`appsettings.json` is created next to `QuickReply.exe` on first launch:
+`appsettings.json` is created in the data folder on first launch:
 
 ```json
 {
@@ -303,24 +336,26 @@ Any `{{date:FORMAT}}` placeholder is replaced with the current local date and ti
   "CheckForUpdatesOnStartup": true,
   "RandomizeResponses": true,
   "SignatureCode": "sig",
-  "TutorialShown": false
+  "TutorialShown": false,
+  "SafeSignatureMode": true
 }
 ```
 
-Tip: you do not actually need to edit this file. The tray menu's **Settings...** item opens a GUI that covers every option here. Open `appsettings.json` directly only if you want to script changes or sync settings across machines.
+You do not have to touch this file. The tray menu's **Settings...** item covers every option here.
 
 | Setting | Purpose |
 | --- | --- |
 | `AutoPaste` | If `false`, the Paste button copies only and does not send Ctrl+V |
-| `RestoreClipboardAfterPaste` | Saves whatever was on the clipboard before paste, restores it after |
-| `ClipboardRestoreDelayMs` | How long to wait before restoring the previous clipboard. Raise this for slow apps |
+| `RestoreClipboardAfterPaste` | Snapshots HTML/RTF/text/image/file-list before paste, restores after |
+| `ClipboardRestoreDelayMs` | How long to wait before restoring the previous clipboard |
 | `PasteDelayMs` | Pause after focusing the target window, before sending Ctrl+V |
 | `Theme` | `dark` (default) or anything else for system default |
 | `Hotkey` | Modifiers and key joined with `+`. See below |
-| `CheckForUpdatesOnStartup` | If `true` (default), checks GitHub for a newer release shortly after launch |
-| `RandomizeResponses` | If `true` (default), picks a random variant when a code has multiple replies. If `false`, always uses the first variant. |
-| `SignatureCode` | The picker code that triggers a rich-text signature paste. Defaults to `sig`. Change it if you want to define your own snippet at `sig`. |
-| `TutorialShown` | Set to `true` once the first-launch tutorial has been seen. Reset to `false` (or use the tray menu's **Show Tutorial...** item) to replay it. |
+| `CheckForUpdatesOnStartup` | If `true` (default), pings GitHub once shortly after launch |
+| `RandomizeResponses` | If `true` (default), picks a random variant when a code has multiple replies |
+| `SignatureCode` | Picker code that triggers a rich-text signature paste. Defaults to `sig` |
+| `TutorialShown` | Set to `true` once the first-launch tutorial has been seen |
+| `SafeSignatureMode` | If `true` (default), strips dangerous HTML from the signature before paste |
 
 ### Hotkey format
 
@@ -328,95 +363,49 @@ Modifiers: `Ctrl`, `Alt`, `Shift`, `Win`. Keys: any letter, digit, common punctu
 
 Examples: `Ctrl+Alt+;`, `Ctrl+Shift+Space`, `Win+Alt+Q`, `Ctrl+F12`.
 
-Settings are read once at startup. After editing the file, right-click the tray icon, choose **Exit**, then launch again.
+The Settings dialog re-registers the hotkey live; if the new combination is already taken by another app, it rolls back and tells you.
 
 ## Updates
 
-QuickReply checks GitHub for a newer release on startup. The check is quiet: nothing happens if you are on the latest version, and a single tray balloon appears if an update is available. Click the balloon to open the GitHub releases page.
+QuickReply checks GitHub for a newer release on startup. The check is quiet: nothing happens if you are on the latest version, and a single tray balloon appears if an update is available.
 
-You can also trigger a check on demand from the tray menu via **Check for Updates...**. That path always reports the result, including a "you are on the latest version" confirmation.
+You can also trigger a check on demand from the tray menu via **Check for Updates...**. That path always reports the result.
 
-If you do not want the startup check, set `CheckForUpdatesOnStartup` to `false` in `appsettings.json`. The on-demand menu item still works.
-
-No automatic install. QuickReply will never overwrite itself while running. To upgrade, download the new `QuickReply.exe` from the releases page and replace your existing copy.
-
-## Run on Windows startup
-
-1. Press **Win + R**, type `shell:startup`, press Enter.
-2. Right-click in that folder, choose **New** then **Shortcut**.
-3. Point the shortcut at `QuickReply.exe`.
-4. Click **Finish**.
-
-QuickReply will start minimized to the tray on sign-in.
+No automatic install. QuickReply will never overwrite itself while running. To upgrade, download the new `QuickReply.exe` (or rerun `QuickReplySetup.exe`) and replace your existing copy.
 
 ## A note on elevated apps
 
-Windows blocks input from non-elevated processes into elevated windows (UIPI). If you paste into an app running **as administrator** while QuickReply is not, the paste will silently fail. **Copy Only** still works in that case: the snippet lands on the clipboard and you can press Ctrl+V yourself.
-
-If you really need paste to work for elevated targets, run QuickReply itself as administrator.
+Windows blocks input from non-elevated processes into elevated windows (UIPI). If you paste into an app running **as administrator** while QuickReply is not, AutoPaste will silently fail. Copy Only still works: the snippet lands on the clipboard and you can press Ctrl+V yourself. If you need AutoPaste against elevated targets, run QuickReply itself as administrator.
 
 ## Troubleshooting
 
-**The hotkey does not open the picker**
+**The hotkey does not open the picker.** Another app may already own `Ctrl+Alt+;`. Common culprits: Visual Studio, IDE plugins, other text expanders. Open Settings and pick a different combo.
 
-* Another app may already own `Ctrl+Alt+;`. Common culprits: Visual Studio, IDE plugins, other text expanders. Check for a balloon tip at startup, then pick a different combo in `appsettings.json` and restart.
-* Make sure only one QuickReply is running. It enforces single instance, but a stale process might still hold the hotkey if killed forcefully. Check Task Manager.
-* The tray icon always works as a fallback: double-click it to open the picker.
+**Paste does not work.** The target app may be elevated, or it may reject programmatic paste. Use Copy Only. Try raising `PasteDelayMs` to 250 or 400.
 
-**Paste does not work**
+**Snippets file is malformed.** QuickReply shows a warning with the exact entries it skipped and keeps previously loaded snippets in memory, so you are not locked out. Fix the JSON and click Reload Snippets.
 
-* The target app may be elevated. See the section above. Use **Copy Only** and press Ctrl+V yourself.
-* Some web apps reject programmatic paste. Use **Copy Only**.
-* Try increasing `PasteDelayMs` to 250 or 400 in `appsettings.json`.
-* Some apps need the clipboard to stay put longer. Increase `ClipboardRestoreDelayMs` to 5000 or higher.
+**Target app eats pasted text.** Use Copy Only and paste manually.
 
-**Snippet file is malformed**
+**Update check fails.** QuickReply hits `api.github.com`. If you are offline or behind a proxy that blocks it, the startup check silently gives up. Turn it off in Settings if you do not want it at all.
 
-* QuickReply shows a warning with the parse error and keeps the previously loaded snippets in memory, so you are not locked out. Fix the JSON (a missing comma is usually the culprit) and click **Reload Snippets**.
-* To start over, delete `snippets.json` and click **Reload Snippets**. QuickReply will recreate the defaults.
+## Contributing
 
-**Target app eats pasted text**
+See [AGENTS.md](AGENTS.md) for layout, design rules, build commands, and what not to do. Issues and PRs welcome on GitHub.
 
-* Use **Copy Only** and paste manually. This is the reliable fallback.
-* Chromium-based ticket systems sometimes intercept paste events when focus has not fully settled. Bumping `PasteDelayMs` helps.
+## License
 
-**Update check fails**
-
-* QuickReply hits `api.github.com`. If you are offline or behind a proxy that blocks it, the startup check silently gives up and the manual menu item reports the error.
-* GitHub allows 60 unauthenticated requests per hour per IP. You are very unlikely to hit that, but if you do, wait an hour or set `CheckForUpdatesOnStartup` to `false`.
+[MIT](LICENSE).
 
 ## Project layout
 
 ```
 QuickReply.sln
 src/QuickReply/                  the tray app
-  Program.cs
-  TrayApplicationContext.cs
-  HotkeyManager.cs
-  SnippetService.cs
-  SettingsService.cs
-  ClipboardService.cs
-  PasteService.cs
-  SnippetPickerForm.cs
-  AddSnippetForm.cs
-  SnippetManagerForm.cs
-  SignatureService.cs
-  SignatureEditorForm.cs
-  SettingsForm.cs
-  TutorialForm.cs
-  Theme.cs
-  UpdateService.cs
-  FocusHelper.cs
-  snippets-defaults.json   (embedded resource: default snippet set)
-  Models/AppSettings.cs
-  app.manifest
 src/QuickReplySetup/             the setup wizard
-  Program.cs
-  SetupWizardForm.cs
-  Installer.cs
-  SetupChoices.cs
-  app.manifest
+.github/workflows/build.yml      CI build
+.github/workflows/release.yml    release pipeline (tag-triggered)
+AGENTS.md                        contributor / agent guide
+LICENSE                          MIT
 README.md
 ```
-
-`snippets.json` and `appsettings.json` are created next to the executable on first launch.

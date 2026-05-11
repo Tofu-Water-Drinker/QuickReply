@@ -11,14 +11,19 @@ namespace QuickReply;
 /// </summary>
 public class SignatureService
 {
+    private readonly SettingsService? _settings;
+
     public string FilePath { get; }
 
     public event EventHandler? Changed;
 
-    public SignatureService(string filePath)
+    public SignatureService(string filePath, SettingsService? settings = null)
     {
         FilePath = filePath;
+        _settings = settings;
     }
+
+    private bool SafeMode => _settings?.Current.SafeSignatureMode ?? true;
 
     public bool LoadOrCreate()
     {
@@ -41,6 +46,11 @@ public class SignatureService
         }
     }
 
+    /// <summary>
+    /// Returns the signature HTML as stored. Use <see cref="GetHtmlForPaste"/>
+    /// when about to put HTML on the clipboard, since that path applies the
+    /// sanitizer when safe mode is on.
+    /// </summary>
     public string GetHtml()
     {
         try
@@ -53,6 +63,16 @@ public class SignatureService
         {
             return DefaultTemplateHtml;
         }
+    }
+
+    /// <summary>
+    /// Returns the signature HTML run through the sanitizer if safe mode is
+    /// on, or the raw HTML otherwise. This is what the paste path should use.
+    /// </summary>
+    public string GetHtmlForPaste()
+    {
+        var raw = GetHtml();
+        return SafeMode ? HtmlSanitizer.Sanitize(raw) : raw;
     }
 
     public string GetPlainText() => HtmlToPlainText(GetHtml());

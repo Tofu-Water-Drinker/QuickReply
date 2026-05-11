@@ -1,0 +1,42 @@
+name: build
+
+on:
+  push:
+    branches: [main, test]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore QuickReply.sln
+
+      - name: Build (Release)
+        run: dotnet build QuickReply.sln -c Release --no-restore
+
+      - name: Publish QuickReply (smoke test)
+        run: >
+          dotnet publish src/QuickReply/QuickReply.csproj
+          -c Release -r win-x64
+          --self-contained true
+          -p:PublishSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -o publish/QuickReply
+
+      - name: Publish QuickReplySetup (smoke test)
+        run: >
+          dotnet publish src/QuickReplySetup/QuickReplySetup.csproj
+          -c Release -r win-x64
+          --self-contained true
+          -p:PublishSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -o publish/QuickReplySetup

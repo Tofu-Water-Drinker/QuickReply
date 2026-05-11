@@ -24,6 +24,14 @@ public class SnippetService
 
     public string FilePath { get; }
     public IReadOnlyDictionary<string, SnippetEntry> Snippets => _snippets;
+
+    /// <summary>
+    /// Entries from <c>snippets.json</c> the parser had to skip on the last
+    /// load (wrong JSON type, empty array, etc.). Useful so the UI can show
+    /// the user exactly what was ignored instead of silently dropping it.
+    /// </summary>
+    public IReadOnlyList<SnippetLoadIssue> LastLoadIssues { get; private set; } = Array.Empty<SnippetLoadIssue>();
+
     public event EventHandler? Reloaded;
 
     public SnippetService(string filePath)
@@ -43,9 +51,24 @@ public class SnippetService
             }
 
             var json = File.ReadAllText(FilePath);
-            var parsed = ParseSnippetsJson(json);
+            var (parsed, issues) = ParseSnippetsJson(json);
             _snippets = parsed;
+            LastLoadIssues = issues;
             Reloaded?.Invoke(this, EventArgs.Empty);
+
+            if (issues.Count > 0)
+            {
+                var preview = string.Join("\n",
+                    issues.Take(8).Select(i => $"  - \"{i.Code}\": {i.Reason}"));
+                if (issues.Count > 8) preview += $"\n  ... and {issues.Count - 8} more.";
+                MessageBox.Show(
+                    $"Loaded {_snippets.Count} snippets, but skipped {issues.Count} invalid " +
+                    $"entr{(issues.Count == 1 ? "y" : "ies")} in snippets.json:\n\n{preview}\n\n" +
+                    "Fix or remove these entries and click Reload Snippets.",
+                    "QuickReply",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+            }
             return true;
         }
         catch (Exception ex)
@@ -170,47 +193,106 @@ public class SnippetService
 
     // ── JSON helpers ─────────────────────────────────────────────────────
 
-    private static Dictionary<string, SnippetEntry> ParseSnippetsJson(string json)
+    private static (Dictionary<string, SnippetEntry> Snippets, List<SnippetLoadIssue> Issues) ParseSnippetsJson(string json)
     {
         var result = new Dictionary<string, SnippetEntry>(StringComparer.OrdinalIgnoreCase);
-        if (string.IsNullOrWhiteSpace(json)) return result;
+        var issues = new List<SnippetLoadIssue>();
+        if (string.IsNullOrWhiteSpace(json)) return (result, issues);
 
         using var doc = JsonDocument.Parse(json);
-        if (doc.RootElement.ValueKind != JsonValueKind.Object) return result;
+        if (doc.RootElement.ValueKind != JsonValueKind.Object) return (result, issues);
 
         foreach (var prop in doc.RootElement.EnumerateObject())
         {
             var code = prop.Name;
+            if (string.IsNullOrWhiteSpace(code))
+            {
+                issues.Add(new SnippetLoadIssue("(blank)", "Snippet code cannot be empty."));
+                continue;
+            }
+
             switch (prop.Value.ValueKind)
             {
                 case JsonValueKind.String:
                     var s = prop.Value.GetString() ?? string.Empty;
                     if (s.StartsWith('@'))
                     {
-                        result[code] = SnippetEntry.WithAlias(s[1..].Trim());
+                        var target = s[1..].Trim();
+                        if (string.IsNullOrEmpty(target))
+                        {
+                            issues.Add(new SnippetLoadIssue(code, "Alias has no target (just '@')."));
+                            break;
+                        }
+                        result[code] = SnippetEntry.WithAlias(target);
                     }
                     else
                     {
+                        if (string.IsNullOrWhiteSpace(s))
+                        {
+                            issues.Add(new SnippetLoadIssue(code, "Reply text is empty."));
+                            break;
+                        }
                         result[code] = SnippetEntry.WithVariants(new[] { s });
                     }
                     break;
 
                 case JsonValueKind.Array:
                     var list = new List<string>();
+                    var arrayIndex = 0;
                     foreach (var item in prop.Value.EnumerateArray())
                     {
                         if (item.ValueKind == JsonValueKind.String)
-                            list.Add(item.GetString() ?? string.Empty);
+                        {
+                            var v = item.GetString() ?? string.Empty;
+                            if (string.IsNullOrWhiteSpace(v))
+                            {
+                                issues.Add(new SnippetLoadIssue(code,
+                                    $"Variant at index {arrayIndex} is empty; skipped."));
+                            }
+                            else
+                            {
+                                list.Add(v);
+                            }
+                        }
+                        else
+                        {
+                            issues.Add(new SnippetLoadIssue(code,
+                                $"Variant at index {arrayIndex} is {DescribeKind(item.ValueKind)}; only strings are allowed."));
+                        }
+                        arrayIndex++;
                     }
                     if (list.Count > 0)
+                    {
                         result[code] = SnippetEntry.WithVariants(list.ToArray());
+                    }
+                    else
+                    {
+                        issues.Add(new SnippetLoadIssue(code, "No usable string variants in array."));
+                    }
                     break;
 
-                // Anything else (null, number, object, bool) is silently ignored.
+                case JsonValueKind.Null:
+                    issues.Add(new SnippetLoadIssue(code, "Value is null."));
+                    break;
+
+                default:
+                    issues.Add(new SnippetLoadIssue(code,
+                        $"Value is {DescribeKind(prop.Value.ValueKind)}; expected a string, array of strings, or \"@target\" alias."));
+                    break;
             }
         }
-        return result;
+        return (result, issues);
     }
+
+    private static string DescribeKind(JsonValueKind kind) => kind switch
+    {
+        JsonValueKind.True or JsonValueKind.False => "a boolean",
+        JsonValueKind.Number => "a number",
+        JsonValueKind.Object => "an object",
+        JsonValueKind.Array  => "an array",
+        JsonValueKind.Null   => "null",
+        _ => kind.ToString().ToLowerInvariant()
+    };
 
     private static string SerialiseSnippets(Dictionary<string, SnippetEntry> snippets)
     {
@@ -242,6 +324,8 @@ public class SnippetService
         return reader.ReadToEnd();
     }
 }
+
+public sealed record SnippetLoadIssue(string Code, string Reason);
 
 public class SnippetEntry
 {

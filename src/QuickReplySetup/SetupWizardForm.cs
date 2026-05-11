@@ -30,6 +30,7 @@ public class SetupWizardForm : Form
     private DataGridView _snippetsGrid = null!;
     private CheckBox _startupCheckbox = null!;
     private CheckBox _randomizeCheckbox = null!;
+    private CheckBox _portableCheckbox = null!;
     private Label _summaryLabel = null!;
     private ProgressBar _installProgress = null!;
     private Label _installStatusLabel = null!;
@@ -441,14 +442,14 @@ public class SetupWizardForm : Form
             ForeColor = Theme.TextMuted,
             BackColor = Theme.Bg,
             AutoSize = true,
-            Location = new Point(0, 232)
+            Location = new Point(0, 220)
         };
         _randomizeCheckbox = new CheckBox
         {
             Text = "Pick a random variant each time a code has multiple replies",
             Checked = true,
             AutoSize = true,
-            Location = new Point(0, 254),
+            Location = new Point(0, 242),
             Font = Theme.BodyLg(),
             ForeColor = Theme.Text,
             BackColor = Theme.Bg,
@@ -456,12 +457,43 @@ public class SetupWizardForm : Form
         };
         var randomHint = new Label
         {
-            Text = "Many of the included snippets ship with 8 different ways to say the same thing\n(\"following up\", \"checking in\", \"circling back\"...). With this enabled, customers\non different tickets see different wording instead of the exact same paragraph.\nDisable to always paste the first variant.",
+            Text = "Many of the included snippets ship with 8 different ways to say the same thing.\nDisable to always paste the first variant.",
             Font = Theme.Status(),
             ForeColor = Theme.TextDim,
             BackColor = Theme.Bg,
             AutoSize = true,
-            Location = new Point(2, 284)
+            Location = new Point(2, 270)
+        };
+
+        // ── Portable mode ────────────────────────────────────────────────
+        var portableHeading = new Label
+        {
+            Text = "DATA LOCATION",
+            Font = Theme.Caps(),
+            ForeColor = Theme.TextMuted,
+            BackColor = Theme.Bg,
+            AutoSize = true,
+            Location = new Point(0, 314)
+        };
+        _portableCheckbox = new CheckBox
+        {
+            Text = "Portable mode: keep snippets and settings next to QuickReply.exe",
+            Checked = false,
+            AutoSize = true,
+            Location = new Point(0, 336),
+            Font = Theme.BodyLg(),
+            ForeColor = Theme.Text,
+            BackColor = Theme.Bg,
+            FlatStyle = FlatStyle.Standard
+        };
+        var portableHint = new Label
+        {
+            Text = "By default, snippets.json, appsettings.json, and signature.html live in\n%APPDATA%\\QuickReply so they survive reinstalls and roam in domain profiles.\nEnable portable mode for a self-contained USB / single-folder install.",
+            Font = Theme.Status(),
+            ForeColor = Theme.TextDim,
+            BackColor = Theme.Bg,
+            AutoSize = true,
+            Location = new Point(2, 364)
         };
 
         panel.Controls.Add(startupHeading);
@@ -470,6 +502,9 @@ public class SetupWizardForm : Form
         panel.Controls.Add(randomHeading);
         panel.Controls.Add(_randomizeCheckbox);
         panel.Controls.Add(randomHint);
+        panel.Controls.Add(portableHeading);
+        panel.Controls.Add(_portableCheckbox);
+        panel.Controls.Add(portableHint);
         return new Page(panel, "Step 5 of 7", "Preferences");
     }
 
@@ -697,6 +732,7 @@ public class SetupWizardForm : Form
             case "Preferences":
                 _choices.RunOnStartup = _startupCheckbox.Checked;
                 _choices.RandomizeResponses = _randomizeCheckbox.Checked;
+                _choices.PortableMode = _portableCheckbox.Checked;
                 return true;
 
             default:
@@ -717,6 +753,7 @@ public class SetupWizardForm : Form
 
         _summaryLabel.Text =
             $"Install location:\n    {_choices.InstallPath}\n\n" +
+            $"Data location:\n    {_choices.ResolveDataDirectory()}{(_choices.PortableMode ? "  (portable mode)" : "")}\n\n" +
             $"Hotkey:\n    {_choices.Hotkey}\n\n" +
             $"Snippets:\n    {snippetSummary}\n\n" +
             $"Windows startup:\n    {(_choices.RunOnStartup ? "Yes, launch QuickReply when I sign in." : "No, I will launch QuickReply myself.")}\n\n" +

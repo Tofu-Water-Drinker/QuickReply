@@ -17,6 +17,7 @@ public class SignatureEditorForm : Form
     private ActionButton _resetButton = null!;
     private ActionButton _templateButton = null!;
     private Label _statusLabel = null!;
+    private Label _safetyLabel = null!;
     private bool _isDirty;
 
     public SignatureEditorForm(SignatureService signatures)
@@ -28,6 +29,20 @@ public class SignatureEditorForm : Form
         UpdatePreview();
         _isDirty = false;
         UpdateStatus();
+        UpdateSafetyBanner();
+    }
+
+    private void UpdateSafetyBanner()
+    {
+        var warnings = HtmlSanitizer.Inspect(_htmlEditor.Text);
+        if (warnings.Count == 0)
+        {
+            _safetyLabel.Text = "Safe mode is on. Signature HTML is sanitized before paste (scripts, event handlers, javascript: URLs are stripped).";
+            _safetyLabel.ForeColor = Theme.Success;
+            return;
+        }
+        _safetyLabel.Text = "Sanitizer will modify this signature on paste: " + string.Join("  ·  ", warnings);
+        _safetyLabel.ForeColor = Theme.AccentSoft;
     }
 
     private void InitializeUi()
@@ -147,6 +162,7 @@ public class SignatureEditorForm : Form
             _isDirty = true;
             UpdatePreview();
             UpdateStatus();
+            UpdateSafetyBanner();
         };
         _htmlEditor.GotFocus  += (_, _) => { _editorCard.IsFocused = true;  _editorCard.Invalidate(); };
         _htmlEditor.LostFocus += (_, _) => { _editorCard.IsFocused = false; _editorCard.Invalidate(); };
@@ -183,6 +199,18 @@ public class SignatureEditorForm : Form
         _previewCard.Controls.Add(_preview);
 
         // ── Footer ────────────────────────────────────────────────────────
+        _safetyLabel = new Label
+        {
+            Text = "Safe mode is on. Signature HTML is sanitized before paste (scripts, event handlers, javascript: URLs are stripped).",
+            Font = Theme.Status(),
+            ForeColor = Theme.Success,
+            BackColor = Theme.Bg,
+            AutoSize = false,
+            Size = new Size(inner, 18),
+            Location = new Point(pad + 2, 524),
+            TextAlign = ContentAlignment.MiddleLeft
+        };
+
         var tip = new Label
         {
             Text = "Tip: paste with the picker by typing the signature code (default \"sig\"). Inline images are embedded as base64.",
@@ -190,7 +218,7 @@ public class SignatureEditorForm : Form
             ForeColor = Theme.TextDim,
             BackColor = Theme.Bg,
             AutoSize = true,
-            Location = new Point(pad + 2, 538)
+            Location = new Point(pad + 2, 548)
         };
         _statusLabel = new Label
         {
@@ -231,6 +259,7 @@ public class SignatureEditorForm : Form
         Controls.Add(_editorCard);
         Controls.Add(previewLabel);
         Controls.Add(_previewCard);
+        Controls.Add(_safetyLabel);
         Controls.Add(tip);
         Controls.Add(_statusLabel);
         Controls.Add(_cancelButton);

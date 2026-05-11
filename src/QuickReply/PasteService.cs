@@ -38,7 +38,7 @@ public class PasteService
     {
         var settings = _settingsService.Current;
         var previousClipboard = settings.RestoreClipboardAfterPaste
-            ? ClipboardService.SaveText()
+            ? ClipboardService.CaptureSnapshot()
             : null;
 
         if (!putOnClipboard())
@@ -88,7 +88,7 @@ public class PasteService
         return new PasteResult(true, true, null);
     }
 
-    private static void ScheduleClipboardRestore(string? previous, int delayMs)
+    private static void ScheduleClipboardRestore(ClipboardSnapshot? previous, int delayMs)
     {
         if (previous == null) return;
         var ui = SynchronizationContext.Current;
@@ -97,12 +97,17 @@ public class PasteService
             await Task.Delay(Math.Max(0, delayMs)).ConfigureAwait(false);
             if (ui != null)
             {
-                ui.Post(_ => ClipboardService.RestoreText(previous), null);
+                ui.Post(_ =>
+                {
+                    try { ClipboardService.Restore(previous); }
+                    finally { previous.Dispose(); }
+                }, null);
             }
             else
             {
                 // Clipboard requires STA. If no UI context, just try once.
-                try { ClipboardService.RestoreText(previous); } catch { /* ignore */ }
+                try { ClipboardService.Restore(previous); } catch { /* ignore */ }
+                finally { previous.Dispose(); }
             }
         });
     }

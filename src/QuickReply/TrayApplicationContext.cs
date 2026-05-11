@@ -16,18 +16,15 @@ public class TrayApplicationContext : ApplicationContext
 
     public TrayApplicationContext()
     {
-        var baseDir = AppContext.BaseDirectory;
-        var snippetsPath  = Path.Combine(baseDir, "snippets.json");
-        var settingsPath  = Path.Combine(baseDir, "appsettings.json");
-        var signaturePath = Path.Combine(baseDir, "signature.html");
+        PathsService.Initialize();
 
-        _settings = new SettingsService(settingsPath);
+        _settings = new SettingsService(PathsService.SettingsPath);
         _settings.LoadOrCreate();
 
-        _snippets = new SnippetService(snippetsPath);
+        _snippets = new SnippetService(PathsService.SnippetsPath);
         _snippets.LoadOrCreate();
 
-        _signatures = new SignatureService(signaturePath);
+        _signatures = new SignatureService(PathsService.SignaturePath, _settings);
         _signatures.LoadOrCreate();
 
         _paste = new PasteService(_settings);
@@ -299,7 +296,7 @@ public class TrayApplicationContext : ApplicationContext
 
     private void CopySignatureNow()
     {
-        var html  = _signatures.GetHtml();
+        var html  = _signatures.GetHtmlForPaste();
         var plain = _signatures.GetPlainText();
         if (ClipboardService.SetRichText(html, plain))
         {

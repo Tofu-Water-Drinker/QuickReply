@@ -36,6 +36,11 @@ public class SettingsForm : Form
     // Updates
     private CheckBox _updateCheckCheckbox = null!;
 
+    // Privacy
+    private CheckBox _safeSignatureCheckbox = null!;
+    private ActionButton _openDataFolderButton = null!;
+    private Label _dataLocationLabel = null!;
+
     // Footer
     private ActionButton _saveButton = null!;
     private ActionButton _cancelButton = null!;
@@ -66,7 +71,7 @@ public class SettingsForm : Form
         BackColor = Theme.Bg;
         ForeColor = Theme.Text;
         Font = new Font("Segoe UI", 9.75f);
-        ClientSize = new Size(640, 740);
+        ClientSize = new Size(640, 880);
         DoubleBuffered = true;
 
         const int pad = 24;
@@ -296,10 +301,52 @@ public class SettingsForm : Form
             BackColor = Theme.Bg
         };
 
+        // ── Privacy & data ───────────────────────────────────────────────
+        var privacyHeader = MakeSectionHeader("PRIVACY & DATA", new Point(pad, 660));
+
+        _safeSignatureCheckbox = new CheckBox
+        {
+            Text = "Safe mode for signature HTML (strip scripts, event handlers, javascript: URLs)",
+            AutoSize = true,
+            Location = new Point(pad, 684),
+            Font = Theme.BodyLg(),
+            ForeColor = Theme.Text,
+            BackColor = Theme.Bg
+        };
+        var safeHint = new Label
+        {
+            Text = "Recommended. Disable only if you author HTML you trust and need a tag the sanitizer removes.",
+            Font = Theme.Status(),
+            ForeColor = Theme.TextDim,
+            BackColor = Theme.Bg,
+            AutoSize = true,
+            Location = new Point(pad + 2, 714)
+        };
+
+        _dataLocationLabel = new Label
+        {
+            Text = $"Data folder: {PathsService.DataDirectory}{(PathsService.IsPortable ? "  (portable mode)" : "")}",
+            Font = Theme.Status(),
+            ForeColor = Theme.TextMuted,
+            BackColor = Theme.Bg,
+            AutoSize = false,
+            Size = new Size(inner - 150, 18),
+            Location = new Point(pad, 742)
+        };
+        _openDataFolderButton = new ActionButton
+        {
+            Text = "Open folder",
+            Style = ActionButtonStyle.Secondary,
+            Size = new Size(120, 28),
+            Location = new Point(ClientSize.Width - pad - 120, 738),
+            BackColor = Theme.Bg
+        };
+        _openDataFolderButton.Click += (_, _) => OpenDataFolder();
+
         // ── Footer ────────────────────────────────────────────────────────
         _statusLabel = new Label
         {
-            Location = new Point(pad + 2, 686),
+            Location = new Point(pad + 2, 826),
             AutoSize = false,
             Size = new Size(inner - 320, 24),
             TextAlign = ContentAlignment.MiddleLeft,
@@ -313,7 +360,7 @@ public class SettingsForm : Form
             Text = "Reset to defaults",
             Style = ActionButtonStyle.Ghost,
             Size = new Size(140, 34),
-            Location = new Point(ClientSize.Width - pad - 308, 682),
+            Location = new Point(ClientSize.Width - pad - 308, 822),
             BackColor = Theme.Bg
         };
         _resetButton.Click += (_, _) => ResetToDefaults();
@@ -323,7 +370,7 @@ public class SettingsForm : Form
             Text = "Cancel",
             Style = ActionButtonStyle.Ghost,
             Size = new Size(78, 34),
-            Location = new Point(ClientSize.Width - pad - 164, 682),
+            Location = new Point(ClientSize.Width - pad - 164, 822),
             BackColor = Theme.Bg
         };
         _cancelButton.Click += (_, _) =>
@@ -337,7 +384,7 @@ public class SettingsForm : Form
             Text = "Save",
             Style = ActionButtonStyle.Primary,
             Size = new Size(82, 34),
-            Location = new Point(ClientSize.Width - pad - 82, 682),
+            Location = new Point(ClientSize.Width - pad - 82, 822),
             BackColor = Theme.Bg
         };
         _saveButton.Click += (_, _) => DoSave();
@@ -367,6 +414,12 @@ public class SettingsForm : Form
 
         Controls.Add(updatesHeader);
         Controls.Add(_updateCheckCheckbox);
+
+        Controls.Add(privacyHeader);
+        Controls.Add(_safeSignatureCheckbox);
+        Controls.Add(safeHint);
+        Controls.Add(_dataLocationLabel);
+        Controls.Add(_openDataFolderButton);
 
         Controls.Add(_statusLabel);
         Controls.Add(_resetButton);
@@ -405,7 +458,24 @@ public class SettingsForm : Form
         _randomizeCheckbox.Checked = s.RandomizeResponses;
         _signatureCodeInput.Text = s.SignatureCode;
         _updateCheckCheckbox.Checked = s.CheckForUpdatesOnStartup;
+        _safeSignatureCheckbox.Checked = s.SafeSignatureMode;
         _statusLabel.Text = string.Empty;
+    }
+
+    private void OpenDataFolder()
+    {
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = PathsService.DataDirectory,
+                UseShellExecute = true
+            });
+        }
+        catch (Exception ex)
+        {
+            ShowError("Could not open folder: " + ex.Message);
+        }
     }
 
     private void ResetToDefaults()
@@ -466,7 +536,8 @@ public class SettingsForm : Form
             CheckForUpdatesOnStartup   = _updateCheckCheckbox.Checked,
             RandomizeResponses         = _randomizeCheckbox.Checked,
             SignatureCode              = sigCode,
-            TutorialShown              = current.TutorialShown
+            TutorialShown              = current.TutorialShown,
+            SafeSignatureMode          = _safeSignatureCheckbox.Checked
         };
         DialogResult = DialogResult.OK;
         Close();
