@@ -1,17 +1,9 @@
-using System.Runtime.InteropServices;
 using QuickReply.Models;
 
 namespace QuickReply;
 
 public class PasteService
 {
-    [DllImport("user32.dll")]
-    private static extern IntPtr GetForegroundWindow();
-
-    [DllImport("user32.dll")]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool SetForegroundWindow(IntPtr hWnd);
-
     private readonly SettingsService _settingsService;
 
     public PasteService(SettingsService settingsService)
@@ -19,7 +11,7 @@ public class PasteService
         _settingsService = settingsService;
     }
 
-    public static IntPtr CaptureForegroundWindow() => GetForegroundWindow();
+    public static IntPtr CaptureForegroundWindow() => FocusHelper.CurrentForegroundWindow();
 
     /// <summary>
     /// Puts <paramref name="text"/> on the clipboard. If a previous foreground window
@@ -59,8 +51,12 @@ public class PasteService
                 : "Copied. AutoPaste is disabled.");
         }
 
-        var focusRestored = SetForegroundWindow(previousWindow);
-        if (!focusRestored)
+        // Give Windows a beat to finish hiding the picker and reassign
+        // foreground before we try to take it. Without this, the focus
+        // restore can race the hide and silently no-op.
+        Thread.Sleep(40);
+
+        if (!FocusHelper.ForceForeground(previousWindow))
         {
             return new PasteResult(true, false, "Copied. Could not return focus to the previous window.");
         }

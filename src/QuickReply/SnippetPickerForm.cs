@@ -494,11 +494,18 @@ public class SnippetPickerForm : Form
             var plain = _signatures.GetPlainText();
             var prevSig = PreviousWindow;
             Hide();
-            var sigResult = _paste.PasteOrCopyRich(html, plain, prevSig);
-            if (!string.IsNullOrEmpty(sigResult.Message))
+            // BeginInvoke defers the paste until after the message loop has
+            // fully processed Hide() and reassigned foreground. Without this,
+            // PasteOrCopyRich races our own hide and the focus restore lands
+            // on a window that has not actually given up foreground yet.
+            BeginInvoke(new Action(() =>
             {
-                ShowStatus(sigResult.Message, sigResult.Pasted ? Theme.Success : Theme.TextMuted);
-            }
+                var sigResult = _paste.PasteOrCopyRich(html, plain, prevSig);
+                if (!string.IsNullOrEmpty(sigResult.Message))
+                {
+                    ShowStatus(sigResult.Message, sigResult.Pasted ? Theme.Success : Theme.TextMuted);
+                }
+            }));
             return;
         }
 
@@ -511,12 +518,14 @@ public class SnippetPickerForm : Form
 
         var prev = PreviousWindow;
         Hide();
-
-        var result = _paste.PasteOrCopy(text, prev);
-        if (!string.IsNullOrEmpty(result.Message))
+        BeginInvoke(new Action(() =>
         {
-            ShowStatus(result.Message, result.Pasted ? Theme.Success : Theme.TextMuted);
-        }
+            var result = _paste.PasteOrCopy(text, prev);
+            if (!string.IsNullOrEmpty(result.Message))
+            {
+                ShowStatus(result.Message, result.Pasted ? Theme.Success : Theme.TextMuted);
+            }
+        }));
     }
 
     private void DoCopyOnly()
