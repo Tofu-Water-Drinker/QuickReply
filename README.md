@@ -25,8 +25,6 @@ The Signature editor with live preview:
 
 ![Signature editor screenshot](docs/screenshots/signature.png)
 
-> If these images are missing, the project has not finished its first packaging pass with screenshots. The app is otherwise the same.
-
 ## Why QuickReply exists
 
 QuickReply started as a simple AutoHotkey script for common service desk responses. The idea was practical: type short triggers like `;fu`, `;vm`, `;close`, `;rbt` and have them expand into pre-written ticket replies, so techs would not have to retype "Following up on this ticket..." for the hundredth time that week.
