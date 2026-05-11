@@ -8,4 +8,5 @@ public class AppSettings
     public int PasteDelayMs { get; set; } = 150;
     public string Theme { get; set; } = "dark";
     public string Hotkey { get; set; } = "Ctrl+Alt+;";
+    public bool CheckForUpdatesOnStartup { get; set; } = true;
 }

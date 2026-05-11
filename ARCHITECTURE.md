@@ -66,6 +66,17 @@ When debugging via `dotnet run`, these files land in
   used by the picker: `CardPanel`, `ChipButton`, `ActionButton`, `HotkeyPill`.
   All custom controls clear to `BackColor` before painting their rounded path
   so the corners outside the path blend with the parent.
+- `UpdateService.cs` — queries
+  `https://api.github.com/repos/{RepoOwner}/{RepoName}/releases/latest`,
+  parses `tag_name`, strips any leading `v` and any `-prerelease` / `+meta`
+  suffix, and compares against `Assembly.GetName().Version`. The version
+  comparison normalises missing Build/Revision components (Version uses -1
+  for absent parts) so a 3-part tag like `v1.0.0` compares cleanly against
+  a 4-part AssemblyVersion like `1.0.0.0`. `TrayApplicationContext` owns the
+  service; an auto-check fires 5 seconds after startup (configurable via
+  `CheckForUpdatesOnStartup` in `appsettings.json`), and the
+  "Check for Updates..." tray menu item runs a manual check that always
+  reports the result.
 
 ## Hotkey / paste gotchas
 - Default hotkey is `Ctrl+Alt+;` (`VK_OEM_1` = `0xBA`). It is configurable
@@ -119,6 +130,16 @@ at paste/copy time, not at load time, so the timestamp is current.
 - The picker form is `FormBorderStyle.None` with `CS_DROPSHADOW` and
   `WS_EX_TOOLWINDOW` in `CreateParams`. It's dismissed on `Deactivate` so
   the user can click anywhere outside to close.
+- Updates never auto-install. `UpdateService` only reports availability;
+  the user clicks through to the GitHub releases page to download the new
+  exe by hand. Self-replacing a running `.exe` is brittle on Windows and
+  is intentionally out of scope.
+- Bump the project version in **two places** when you cut a release:
+  the `<Version>` element in `src/QuickReply/QuickReply.csproj`, and the
+  corresponding `vX.Y.Z` tag on the GitHub release. The version check
+  reads `Assembly.GetName().Version` and compares it to the release tag,
+  so the two must agree or running installs will either miss updates or
+  nag forever.
 
 ## Documentation style
 - The README leads with **why** QuickReply exists (the AutoHotkey-script

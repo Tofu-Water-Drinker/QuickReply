@@ -10,6 +10,8 @@ public class TrayApplicationContext : ApplicationContext
     private readonly SettingsService _settings;
     private readonly PasteService _paste;
     private readonly SnippetPickerForm _picker;
+    private readonly UpdateService _updates;
+    private string? _pendingUpdateUrl;
 
     public TrayApplicationContext()
     {
@@ -25,6 +27,7 @@ public class TrayApplicationContext : ApplicationContext
 
         _paste = new PasteService(_settings);
         _picker = new SnippetPickerForm(_snippets, _paste, _settings);
+        _updates = new UpdateService();
 
         _trayIcon = new NotifyIcon
         {
@@ -41,6 +44,7 @@ public class TrayApplicationContext : ApplicationContext
                 OpenPicker();
             }
         };
+        _trayIcon.BalloonTipClicked += OnUpdateBalloonClicked;
 
         _hotkeys = new HotkeyManager();
         _hotkeys.HotkeyPressed += (_, _) => OpenPicker();
@@ -64,6 +68,11 @@ public class TrayApplicationContext : ApplicationContext
         }
 
         Application.ApplicationExit += OnApplicationExit;
+
+        if (_settings.Current.CheckForUpdatesOnStartup)
+        {
+            _ = AutoCheckUpdatesAsync();
+        }
     }
 
     private ContextMenuStrip BuildTrayMenu()
@@ -76,8 +85,100 @@ public class TrayApplicationContext : ApplicationContext
         menu.Items.Add("Open Snippets File", null, (_, _) => OpenFile(_snippets.FilePath));
         menu.Items.Add("Open Settings File", null, (_, _) => OpenFile(_settings.FilePath));
         menu.Items.Add(new ToolStripSeparator());
+        menu.Items.Add("Check for Updates...", null, (_, _) => CheckForUpdatesNow());
+        menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add("Exit", null, (_, _) => ExitApp());
         return menu;
+    }
+
+    private async Task AutoCheckUpdatesAsync()
+    {
+        try
+        {
+            // Brief delay so we don't compete with app startup work.
+            await Task.Delay(TimeSpan.FromSeconds(5)).ConfigureAwait(true);
+            var result = await _updates.CheckAsync().ConfigureAwait(true);
+            if (!result.Success || !result.UpdateAvailable) return;
+
+            _pendingUpdateUrl = result.ReleaseUrl;
+            _trayIcon.ShowBalloonTip(
+                6000,
+                "QuickReply update available",
+                $"A new version ({result.ReleaseTag}) is on GitHub. " +
+                "Click here to open the releases page.",
+                ToolTipIcon.Info);
+        }
+        catch
+        {
+            // Fire-and-forget: never let a failed update check disturb the user.
+        }
+    }
+
+    private async void CheckForUpdatesNow()
+    {
+        _trayIcon.ShowBalloonTip(1500, "QuickReply", "Checking for updates...", ToolTipIcon.None);
+        var result = await _updates.CheckAsync().ConfigureAwait(true);
+
+        if (!result.Success)
+        {
+            MessageBox.Show(
+                $"Could not check for updates.\n\n{result.ErrorMessage}\n\n" +
+                $"Releases page: {result.ReleaseUrl}",
+                "QuickReply",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Warning);
+            return;
+        }
+
+        if (result.UpdateAvailable)
+        {
+            var choice = MessageBox.Show(
+                $"A new version of QuickReply is available.\n\n" +
+                $"Installed:  v{result.CurrentVersion}\n" +
+                $"Available:  {result.ReleaseTag}\n\n" +
+                $"Open the GitHub releases page now?",
+                "QuickReply update available",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Information);
+            if (choice == DialogResult.Yes && !string.IsNullOrEmpty(result.ReleaseUrl))
+            {
+                OpenUrl(result.ReleaseUrl);
+            }
+        }
+        else
+        {
+            MessageBox.Show(
+                $"You are running the latest version (v{result.CurrentVersion}).",
+                "QuickReply",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information);
+        }
+    }
+
+    private void OnUpdateBalloonClicked(object? sender, EventArgs e)
+    {
+        if (!string.IsNullOrEmpty(_pendingUpdateUrl))
+        {
+            OpenUrl(_pendingUpdateUrl);
+            _pendingUpdateUrl = null;
+        }
+    }
+
+    private static void OpenUrl(string url)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = url,
+                UseShellExecute = true
+            });
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show("Could not open URL: " + ex.Message, "QuickReply",
+                MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
     }
 
     private void OpenPicker()
@@ -140,6 +241,7 @@ public class TrayApplicationContext : ApplicationContext
             try { _hotkeys.Dispose(); } catch { /* ignore */ }
             try { _trayIcon.Visible = false; _trayIcon.Dispose(); } catch { /* ignore */ }
             try { _picker.Dispose(); } catch { /* ignore */ }
+            try { _updates.Dispose(); } catch { /* ignore */ }
         }
         base.Dispose(disposing);
     }

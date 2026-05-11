@@ -38,6 +38,7 @@ The full list lives in `snippets.json`. Edit, add, rename, and reload without re
 * In-app snippet editor, no JSON wrangling required
 * Tray menu for reload, settings file, snippets file, exit
 * Reload snippets without restarting the app
+* Quiet GitHub update check on startup, plus an on-demand "Check for Updates..." menu item
 * Single executable, no installer, zero third-party NuGet packages
 * Designed for service desk ticket workflows
 * .NET 8, WinForms, Windows 10/11
@@ -124,7 +125,8 @@ Any `{{date:FORMAT}}` placeholder is replaced with the current local date and ti
   "ClipboardRestoreDelayMs": 2500,
   "PasteDelayMs": 150,
   "Theme": "dark",
-  "Hotkey": "Ctrl+Alt+;"
+  "Hotkey": "Ctrl+Alt+;",
+  "CheckForUpdatesOnStartup": true
 }
 ```
 
@@ -136,6 +138,7 @@ Any `{{date:FORMAT}}` placeholder is replaced with the current local date and ti
 | `PasteDelayMs` | Pause after focusing the target window, before sending Ctrl+V |
 | `Theme` | `dark` (default) or anything else for system default |
 | `Hotkey` | Modifiers and key joined with `+`. See below |
+| `CheckForUpdatesOnStartup` | If `true` (default), checks GitHub for a newer release shortly after launch |
 
 ### Hotkey format
 
@@ -144,6 +147,16 @@ Modifiers: `Ctrl`, `Alt`, `Shift`, `Win`. Keys: any letter, digit, common punctu
 Examples: `Ctrl+Alt+;`, `Ctrl+Shift+Space`, `Win+Alt+Q`, `Ctrl+F12`.
 
 Settings are read once at startup. After editing the file, right-click the tray icon, choose **Exit**, then launch again.
+
+## Updates
+
+QuickReply checks GitHub for a newer release on startup. The check is quiet: nothing happens if you are on the latest version, and a single tray balloon appears if an update is available. Click the balloon to open the GitHub releases page.
+
+You can also trigger a check on demand from the tray menu via **Check for Updates...**. That path always reports the result, including a "you are on the latest version" confirmation.
+
+If you do not want the startup check, set `CheckForUpdatesOnStartup` to `false` in `appsettings.json`. The on-demand menu item still works.
+
+No automatic install. QuickReply will never overwrite itself while running. To upgrade, download the new `QuickReply.exe` from the releases page and replace your existing copy.
 
 ## Run on Windows startup
 
@@ -185,6 +198,11 @@ If you really need paste to work for elevated targets, run QuickReply itself as 
 * Use **Copy Only** and paste manually. This is the reliable fallback.
 * Chromium-based ticket systems sometimes intercept paste events when focus has not fully settled. Bumping `PasteDelayMs` helps.
 
+**Update check fails**
+
+* QuickReply hits `api.github.com`. If you are offline or behind a proxy that blocks it, the startup check silently gives up and the manual menu item reports the error.
+* GitHub allows 60 unauthenticated requests per hour per IP. You are very unlikely to hit that, but if you do, wait an hour or set `CheckForUpdatesOnStartup` to `false`.
+
 ## Project layout
 
 ```
@@ -200,6 +218,7 @@ src/QuickReply/
   SnippetPickerForm.cs
   AddSnippetForm.cs
   Theme.cs
+  UpdateService.cs
   Models/AppSettings.cs
   app.manifest
 README.md
