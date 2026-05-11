@@ -47,16 +47,29 @@ public class SettingsService
         }
     }
 
-    public void Save(AppSettings settings)
+    /// <summary>
+    /// Persists <paramref name="settings"/> to <see cref="FilePath"/> AND
+    /// updates the in-memory <see cref="Current"/> cache, so live readers
+    /// (PasteService, picker, etc.) see the new values immediately.
+    /// Returns false only if the file write failed.
+    /// </summary>
+    public bool Save(AppSettings settings)
     {
         try
         {
             var json = JsonSerializer.Serialize(settings, JsonOptions);
             File.WriteAllText(FilePath, json);
+            Current = settings;
+            return true;
         }
-        catch
+        catch (Exception ex)
         {
-            // Best-effort. Don't crash the app over a settings save failure.
+            MessageBox.Show(
+                $"Could not save appsettings.json.\n\n{ex.Message}",
+                "QuickReply",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Warning);
+            return false;
         }
     }
 }

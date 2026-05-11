@@ -78,6 +78,27 @@ public class TrayApplicationContext : ApplicationContext
         {
             _ = AutoCheckUpdatesAsync();
         }
+
+        // First-launch tutorial. Fires after a short delay so the tray icon
+        // and startup balloon land first; otherwise the modal dialog hides
+        // the very thing we are trying to tell the user about.
+        if (!_settings.Current.TutorialShown)
+        {
+            _ = ShowTutorialOnStartupAsync();
+        }
+    }
+
+    private async Task ShowTutorialOnStartupAsync()
+    {
+        try
+        {
+            await Task.Delay(TimeSpan.FromSeconds(3)).ConfigureAwait(true);
+            ShowTutorial(markShown: true);
+        }
+        catch
+        {
+            // Fire and forget. Never let a tutorial failure crash the app.
+        }
     }
 
     private ContextMenuStrip BuildTrayMenu()
@@ -94,10 +115,56 @@ public class TrayApplicationContext : ApplicationContext
         menu.Items.Add("Open Snippets File", null, (_, _) => OpenFile(_snippets.FilePath));
         menu.Items.Add("Open Settings File", null, (_, _) => OpenFile(_settings.FilePath));
         menu.Items.Add(new ToolStripSeparator());
+        menu.Items.Add("Settings...", null, (_, _) => OpenSettings());
+        menu.Items.Add("Show Tutorial...", null, (_, _) => ShowTutorial(markShown: false));
+        menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add("Check for Updates...", null, (_, _) => CheckForUpdatesNow());
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add("Exit", null, (_, _) => ExitApp());
         return menu;
+    }
+
+    private void OpenSettings()
+    {
+        using var dlg = new SettingsForm(_settings);
+        if (dlg.ShowDialog() != DialogResult.OK || dlg.PendingSettings == null) return;
+
+        var oldHotkey = _settings.Current.Hotkey;
+        var newSettings = dlg.PendingSettings;
+        var hotkeyChanged = !string.Equals(newSettings.Hotkey, oldHotkey, StringComparison.OrdinalIgnoreCase);
+
+        // Hotkey re-registration is the only setting that can fail. Try it
+        // before persisting so we can roll back the user's change without
+        // leaving them in a broken state.
+        if (hotkeyChanged)
+        {
+            _hotkeys.UnregisterIfNeeded();
+            if (!_hotkeys.Register(newSettings.Hotkey))
+            {
+                _hotkeys.Register(oldHotkey);
+                MessageBox.Show(
+                    $"Could not register hotkey \"{newSettings.Hotkey}\". Another app may already own it. " +
+                    "Keeping the previous hotkey.",
+                    "QuickReply",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                newSettings.Hotkey = oldHotkey;
+            }
+        }
+
+        _settings.Save(newSettings);
+    }
+
+    private void ShowTutorial(bool markShown)
+    {
+        using var dlg = new TutorialForm();
+        dlg.ShowDialog();
+        if (markShown && !_settings.Current.TutorialShown)
+        {
+            var s = _settings.Current;
+            s.TutorialShown = true;
+            _settings.Save(s);
+        }
     }
 
     private async Task AutoCheckUpdatesAsync()

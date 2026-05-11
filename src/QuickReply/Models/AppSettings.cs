@@ -11,4 +11,5 @@ public class AppSettings
     public bool CheckForUpdatesOnStartup { get; set; } = true;
     public bool RandomizeResponses { get; set; } = true;
     public string SignatureCode { get; set; } = "sig";
+    public bool TutorialShown { get; set; } = false;
 }

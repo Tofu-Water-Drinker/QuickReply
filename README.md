@@ -7,7 +7,7 @@ A small Windows tray utility for service desk and support workflows. Press a hot
 ![Windows](https://img.shields.io/badge/Windows-10%2F11-6366f1?logo=windows&logoColor=white)
 ![.NET 8](https://img.shields.io/badge/.NET-8-6366f1?logo=dotnet&logoColor=white)
 
-> **v1.2.0** added a rich-text signature feature with image support, a side-by-side HTML editor, and three preset templates. [Grab the installer.](https://github.com/Tofu-Water-Drinker/QuickReply/releases/latest/download/QuickReplySetup.exe)
+> **v1.3.0** added a first-launch tutorial and an in-app Settings dialog, so you never need to open a JSON file to change behavior. [Grab the installer.](https://github.com/Tofu-Water-Drinker/QuickReply/releases/latest/download/QuickReplySetup.exe)
 
 ## Why QuickReply exists
 
@@ -21,13 +21,20 @@ It is built for service desk and tier 1/2 support workflows where the same thirt
 
 ## What's new
 
-### v1.2.0 (current)
+### v1.3.0 (current)
 
-* **Signature with rich paste.** A new dedicated signature lives in `signature.html` next to the exe. Type the signature code (default `sig`) in the picker and it pastes as **rich HTML** in apps that support it (Outlook, Gmail web, Teams, modern ticket systems), with a plain-text fallback for everything else.
-* **HTML editor with live preview.** A side-by-side editor: edit HTML on the left, see exactly what gets pasted on the right.
-* **Embed images as base64.** One-click Insert Image button reads a local file and embeds it inline, so the signature is self-contained and travels with the paste.
-* **Three preset templates.** Default (with contact info), Minimal, and With Logo (placeholder included). All are user-editable starting points.
-* **Tray menu shortcuts.** Edit Signature... opens the editor. Copy Signature drops the rich signature on your clipboard without opening the picker.
+* **First-launch tutorial.** A 5-page tour runs automatically the first time you start QuickReply. Covers the hotkey, what ships with the app (snippets, variants, aliases, signature), and how to manage everything from the tray. Skip button on every page; the flag that suppresses replays is `TutorialShown` in `appsettings.json`.
+* **Replay the tutorial any time.** New `Show Tutorial...` item in the tray menu.
+* **In-app Settings dialog.** New `Settings...` tray menu item opens a GUI for every field in `appsettings.json`: hotkey, paste delays, AutoPaste, randomization, signature code, update check. No more editing the JSON by hand.
+* **Live hotkey re-registration.** Change your hotkey in Settings, click Save, and the new combo is live immediately. If the new combo is already taken by another app, QuickReply rolls back to the previous hotkey and tells you.
+* **Reset to defaults** button in Settings restores every field to its built-in value (your snippets and signature stay untouched).
+
+### v1.2.x
+
+* **v1.2.3** Hotkey is now a toggle: press once to open the picker, press again to close.
+* **v1.2.2** Inner-control focus restore for ConnectWise Manage and other apps where the outer window regaining foreground does not auto-restore keyboard focus to the email field.
+* **v1.2.1** Reliable focus restore before paste, via the AttachThreadInput trick and a deferred-paste BeginInvoke.
+* **v1.2.0** Signature with rich paste: dedicated `signature.html`, side-by-side HTML editor with live preview, embedded base64 images, three preset templates, and tray menu shortcuts (`Edit Signature...`, `Copy Signature`).
 
 ### v1.1.0
 
@@ -161,6 +168,8 @@ Right-click the tray icon for the full menu:
 | Reload Snippets | Re-reads `snippets.json` from disk, no restart needed |
 | Open Snippets File | Opens `snippets.json` in your default editor |
 | Open Settings File | Opens `appsettings.json` in your default editor |
+| Settings... | Opens the in-app Settings dialog (hotkey, paste delays, randomization, signature code, update check) |
+| Show Tutorial... | Replays the first-launch tutorial |
 | Check for Updates... | Hits GitHub and tells you whether there is a newer release |
 | Exit | Quits QuickReply and unregisters the global hotkey |
 
@@ -293,9 +302,12 @@ Any `{{date:FORMAT}}` placeholder is replaced with the current local date and ti
   "Hotkey": "Ctrl+Alt+;",
   "CheckForUpdatesOnStartup": true,
   "RandomizeResponses": true,
-  "SignatureCode": "sig"
+  "SignatureCode": "sig",
+  "TutorialShown": false
 }
 ```
+
+Tip: you do not actually need to edit this file. The tray menu's **Settings...** item opens a GUI that covers every option here. Open `appsettings.json` directly only if you want to script changes or sync settings across machines.
 
 | Setting | Purpose |
 | --- | --- |
@@ -308,6 +320,7 @@ Any `{{date:FORMAT}}` placeholder is replaced with the current local date and ti
 | `CheckForUpdatesOnStartup` | If `true` (default), checks GitHub for a newer release shortly after launch |
 | `RandomizeResponses` | If `true` (default), picks a random variant when a code has multiple replies. If `false`, always uses the first variant. |
 | `SignatureCode` | The picker code that triggers a rich-text signature paste. Defaults to `sig`. Change it if you want to define your own snippet at `sig`. |
+| `TutorialShown` | Set to `true` once the first-launch tutorial has been seen. Reset to `false` (or use the tray menu's **Show Tutorial...** item) to replay it. |
 
 ### Hotkey format
 
@@ -389,8 +402,11 @@ src/QuickReply/                  the tray app
   SnippetManagerForm.cs
   SignatureService.cs
   SignatureEditorForm.cs
+  SettingsForm.cs
+  TutorialForm.cs
   Theme.cs
   UpdateService.cs
+  FocusHelper.cs
   snippets-defaults.json   (embedded resource: default snippet set)
   Models/AppSettings.cs
   app.manifest
